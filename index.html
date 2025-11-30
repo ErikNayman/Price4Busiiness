@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Трейдер vs Случайность | Симулятор Риска</title>
+    <title>Трейдер vs Психология | Лаборатория</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -27,38 +27,58 @@
         .slider-thumb:hover::-webkit-slider-thumb {
             background: #0ea5e9;
         }
+        /* Modal styles */
+        .modal-overlay {
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+        }
+        .tab-btn.active {
+            background-color: #0ea5e9;
+            color: white;
+            border-color: #0ea5e9;
+        }
+        .scenario-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
     </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden">
 
     <!-- Header -->
-    <header class="h-16 border-b border-gray-700 flex items-center justify-between px-6 bg-slate-900 z-10">
+    <header class="h-16 border-b border-gray-700 flex items-center justify-between px-6 bg-slate-900 z-10 shrink-0">
         <div class="flex items-center gap-3">
             <div class="w-8 h-8 rounded bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-white font-bold text-lg">T</div>
             <h1 class="text-xl font-bold tracking-tight text-white">Лаборатория <span class="text-cyan-400">Вероятностей</span></h1>
         </div>
-        <div class="text-sm text-gray-400 hidden md:block">
-            Основано на исследовании "Если событие случайно"
+        <div class="flex items-center gap-4">
+            <!-- Tab Switcher -->
+            <div class="bg-gray-800 p-1 rounded-lg flex text-sm font-medium">
+                <button onclick="switchTab('simulation')" id="tab-simulation" class="tab-btn active px-4 py-1.5 rounded-md transition-all text-gray-400">Симулятор</button>
+                <button onclick="switchTab('psychology')" id="tab-psychology" class="tab-btn px-4 py-1.5 rounded-md transition-all text-gray-400">Психология (Канеман)</button>
+            </div>
+            
+            <button onclick="toggleModal()" class="px-3 py-1 text-sm bg-gray-700 hover:bg-gray-600 text-white rounded transition-colors flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                Справка
+            </button>
         </div>
     </header>
 
-    <div class="flex flex-1 overflow-hidden">
+    <!-- VIEW 1: SIMULATION -->
+    <div id="view-simulation" class="flex flex-1 overflow-hidden">
         <!-- Sidebar Controls -->
         <aside class="w-full md:w-80 bg-slate-900 border-r border-gray-700 overflow-y-auto p-6 flex flex-col gap-6 z-10 shadow-2xl">
-            
             <div class="space-y-4">
                 <h2 class="text-xs uppercase tracking-wider text-gray-500 font-semibold">Параметры Сделки</h2>
-                
                 <!-- Win Rate -->
                 <div>
                     <div class="flex justify-between mb-1">
-                        <label class="text-sm font-medium text-gray-300">Вероятность успеха (Win Rate)</label>
+                        <label class="text-sm font-medium text-gray-300">Вероятность успеха</label>
                         <span id="winRateVal" class="text-sm font-bold text-cyan-400">50%</span>
                     </div>
                     <input type="range" id="winRate" min="1" max="99" value="50" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider-thumb">
-                    <p class="text-xs text-gray-500 mt-1">Как часто вы оказываетесь правы?</p>
                 </div>
-
                 <!-- Take Profit -->
                 <div>
                     <div class="flex justify-between mb-1">
@@ -67,7 +87,6 @@
                     </div>
                     <input type="range" id="profit" min="10" max="500" value="100" step="10" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider-thumb">
                 </div>
-
                 <!-- Stop Loss -->
                 <div>
                     <div class="flex justify-between mb-1">
@@ -78,79 +97,323 @@
                     <p class="text-xs text-red-500 mt-1" id="lossWarning">Осторожно! Высокий риск разорения.</p>
                 </div>
             </div>
-
             <div class="h-px bg-gray-700"></div>
-
             <div class="space-y-4">
                 <h2 class="text-xs uppercase tracking-wider text-gray-500 font-semibold">Структура Портфеля</h2>
-                
                 <!-- Positions -->
                 <div>
                     <div class="flex justify-between mb-1">
-                        <label class="text-sm font-medium text-gray-300">Диверсификация (Позиций)</label>
+                        <label class="text-sm font-medium text-gray-300">Диверсификация</label>
                         <span id="positionsVal" class="text-sm font-bold text-purple-400">10</span>
                     </div>
                     <input type="range" id="positions" min="1" max="100" value="10" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider-thumb">
-                    <p class="text-xs text-gray-500 mt-1">Сколько независимых сделок открыто одновременно?</p>
                 </div>
             </div>
-
             <button onclick="runSimulation()" class="mt-4 w-full py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold rounded shadow-lg transform transition active:scale-95 flex items-center justify-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                Запустить Симуляцию
+                Запустить
             </button>
-            
-            <div class="bg-gray-800 p-3 rounded border border-gray-700 text-xs text-gray-400">
-                <p><strong>Сценарий:</strong> Мы моделируем 300 последовательных шагов (дней/недель).</p>
-                <p class="mt-2">Сравниваем ставку "Ва-банк" (красный) со стратегией "Портфеля" (зеленый).</p>
-            </div>
         </aside>
 
         <!-- Main Content -->
         <main class="flex-1 relative flex flex-col">
-            <!-- Stats Bar -->
-            <div class="h-16 bg-slate-800/50 border-b border-gray-700 flex items-center justify-around px-4 backdrop-blur-sm z-10">
+            <div class="h-16 bg-slate-800/50 border-b border-gray-700 flex items-center justify-around px-4 backdrop-blur-sm z-10 shrink-0">
                 <div class="text-center">
-                    <div class="text-xs text-gray-500">Мат. ожидание сделки</div>
+                    <div class="text-xs text-gray-500">Мат. ожидание</div>
                     <div id="mathExpectation" class="text-lg font-mono font-bold text-gray-300">0.00%</div>
                 </div>
                 <div class="text-center border-l border-gray-700 pl-6">
-                    <div class="text-xs text-gray-500">Результат "Ва-банк" (1 актив)</div>
+                    <div class="text-xs text-gray-500">Ва-банк</div>
                     <div id="resultSolo" class="text-lg font-mono font-bold text-red-500">$0</div>
                 </div>
                 <div class="text-center border-l border-gray-700 pl-6">
-                    <div class="text-xs text-gray-500">Результат "Портфеля" (N активов)</div>
+                    <div class="text-xs text-gray-500">Портфель</div>
                     <div id="resultPortfolio" class="text-lg font-mono font-bold text-green-500">$0</div>
                 </div>
             </div>
-
-            <!-- Chart Container -->
-            <div class="flex-1 p-4 md:p-8 relative">
+            <div class="flex-1 p-4 md:p-8 relative min-h-0">
                 <div class="w-full h-full glass-panel rounded-2xl p-4">
                     <canvas id="simulationChart"></canvas>
                 </div>
             </div>
-
-            <!-- Insight Box -->
-            <div id="insightBox" class="absolute bottom-8 right-8 max-w-md bg-slate-800 border-l-4 border-cyan-500 text-white p-4 shadow-2xl rounded-r hidden animate-fade-in-up">
+            <div id="insightBox" class="absolute bottom-8 right-8 max-w-md bg-slate-800 border-l-4 border-cyan-500 text-white p-4 shadow-2xl rounded-r hidden animate-fade-in-up z-20">
                 <h3 class="font-bold mb-1 text-cyan-400">Анализ результата:</h3>
                 <p id="insightText" class="text-sm text-gray-300">...</p>
             </div>
         </main>
     </div>
 
+    <!-- VIEW 2: PSYCHOLOGY -->
+    <div id="view-psychology" class="hidden flex-1 overflow-auto bg-slate-900 p-8">
+        <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            <!-- Left Col: The Theory -->
+            <div class="space-y-6">
+                <div class="glass-panel p-6 rounded-2xl">
+                    <h2 class="text-2xl font-bold text-white mb-4">Почему мы торгуем убыточно?</h2>
+                    <p class="text-gray-300 mb-4 leading-relaxed">
+                        Дэниел Канеман (Нобелевский лауреат) доказал, что люди принимают решения не рационально, а эмоционально. Главная ловушка — 
+                        <span class="text-red-400 font-bold">Неприятие Потерь (Loss Aversion)</span>.
+                    </p>
+                    <p class="text-gray-400 text-sm italic border-l-2 border-gray-600 pl-4 mb-4">
+                        "Боль от потери $1000 ощущается в 2 раза сильнее, чем радость от получения $1000."
+                    </p>
+                    
+                    <div class="h-64 w-full bg-slate-800/50 rounded-lg p-2 border border-gray-700">
+                        <canvas id="prospectTheoryChart"></canvas>
+                    </div>
+                    <p class="text-xs text-center text-gray-500 mt-2">Кривая ценности теории перспектив</p>
+                </div>
+
+                <div class="bg-blue-900/20 border border-blue-500/30 p-4 rounded-xl">
+                    <h3 class="text-blue-400 font-bold mb-2">Как это убивает депозит?</h3>
+                    <ul class="list-disc list-inside text-gray-300 text-sm space-y-2">
+                        <li>Мы <strong class="text-white">пересиживаем убытки</strong>, надеясь на отскок (рискуем ради избегания боли).</li>
+                        <li>Мы <strong class="text-white">рано фиксируем прибыль</strong>, боясь, что рынок развернется (избегаем риска при выигрыше).</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Right Col: The Experiment -->
+            <div class="space-y-6">
+                <div class="glass-panel p-6 rounded-2xl border-t-4 border-purple-500">
+                    <h2 class="text-xl font-bold text-white mb-6">Проверь себя: Тест Канемана</h2>
+                    
+                    <!-- Scenario 1: GAIN -->
+                    <div class="mb-8">
+                        <h3 class="text-sm uppercase tracking-wide text-green-400 font-bold mb-3">Сценарий 1: Прибыль</h3>
+                        <p class="text-gray-300 mb-4">Вам дают выбор. Что вы возьмете?</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <button onclick="checkScenario('gain', 'safe')" class="scenario-card p-4 bg-slate-800 hover:bg-slate-700 border border-gray-600 rounded-lg text-left transition-all group">
+                                <div class="text-lg font-bold text-white mb-1 group-hover:text-green-400 leading-tight">Гарантированно получить $900</div>
+                                <div class="text-xs text-gray-500 mt-1">Риск: 0%</div>
+                            </button>
+                            <button onclick="checkScenario('gain', 'risky')" class="scenario-card p-4 bg-slate-800 hover:bg-slate-700 border border-gray-600 rounded-lg text-left transition-all group">
+                                <div class="text-lg font-bold text-white mb-1 group-hover:text-green-400 leading-tight">90% шанс получить $1000</div>
+                                <div class="text-xs text-gray-500 mt-1">Риск: 10% ничего не получить</div>
+                            </button>
+                        </div>
+                        <div id="feedback-gain" class="hidden mt-3 p-3 rounded bg-slate-800 text-sm"></div>
+                    </div>
+
+                    <div class="h-px bg-gray-700 my-6"></div>
+
+                    <!-- Scenario 2: LOSS -->
+                    <div>
+                        <h3 class="text-sm uppercase tracking-wide text-red-400 font-bold mb-3">Сценарий 2: Убыток</h3>
+                        <p class="text-gray-300 mb-4">Вам грозит штраф. Что вы выберете?</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <button onclick="checkScenario('loss', 'safe')" class="scenario-card p-4 bg-slate-800 hover:bg-slate-700 border border-gray-600 rounded-lg text-left transition-all group">
+                                <div class="text-lg font-bold text-white mb-1 group-hover:text-red-400">Точно потерять $900</div>
+                                <div class="text-xs text-gray-500">Боль: Гарантированная</div>
+                            </button>
+                            <button onclick="checkScenario('loss', 'risky')" class="scenario-card p-4 bg-slate-800 hover:bg-slate-700 border border-gray-600 rounded-lg text-left transition-all group">
+                                <div class="text-lg font-bold text-white mb-1 group-hover:text-red-400">90% шанс потерять $1000</div>
+                                <div class="text-xs text-gray-500">Надежда: 10% избежать убытка</div>
+                            </button>
+                        </div>
+                        <div id="feedback-loss" class="hidden mt-3 p-3 rounded bg-slate-800 text-sm"></div>
+                    </div>
+                </div>
+
+                <div class="bg-green-900/20 border border-green-500/30 p-4 rounded-xl flex gap-3">
+                    <div class="text-2xl">💡</div>
+                    <div>
+                        <h3 class="text-green-400 font-bold mb-1">Решение</h3>
+                        <p class="text-gray-300 text-sm">
+                            Чтобы победить эту психологию, используйте <strong>системный подход</strong> из Симулятора: фиксируйте прибыль по плану (а не от страха) и режьте убытки математически (а не надейтесь).
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Modal (Same as before) -->
+    <div id="helpModal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-overlay opacity-0 transition-opacity duration-300">
+        <div class="bg-slate-900 border border-gray-700 rounded-xl shadow-2xl max-w-2xl w-full mx-4 overflow-hidden transform transition-all scale-95 duration-300">
+            <div class="p-6 border-b border-gray-800 flex justify-between items-center">
+                <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    Как читать этот график?
+                </h2>
+                <button onclick="toggleModal()" class="text-gray-400 hover:text-white transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+            <div class="p-6 space-y-6 overflow-y-auto max-h-[70vh]">
+                <div class="flex gap-4">
+                    <div class="w-12 h-12 rounded-full bg-red-900/30 flex-shrink-0 flex items-center justify-center border border-red-500/50">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-red-400 mb-1">Одиночная серия (Ва-банк)</h3>
+                        <p class="text-sm text-gray-300 leading-relaxed">
+                            Модель трейдера, который совершает сделки последовательно, одну за другой, рискуя всем капиталом в каждой сделке.
+                        </p>
+                    </div>
+                </div>
+                <div class="h-px bg-gray-800"></div>
+                <div class="flex gap-4">
+                    <div class="w-12 h-12 rounded-full bg-green-900/30 flex-shrink-0 flex items-center justify-center border border-green-500/50">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-bold text-green-400 mb-1">Диверсифицированный Портфель</h3>
+                        <p class="text-sm text-gray-300 leading-relaxed">
+                            Модель "Казино" или фонда. Капитал делится на множество мелких, независимых сделок одновременно.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="p-4 bg-slate-950 border-t border-gray-800 flex justify-end">
+                <button onclick="toggleModal()" class="px-6 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded font-medium transition-colors">Понятно</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // --- Configuration & Elements ---
+        // --- Navigation ---
+        let prospectChartInstance = null;
+
+        function switchTab(tabName) {
+            document.getElementById('view-simulation').classList.add('hidden');
+            document.getElementById('view-psychology').classList.add('hidden');
+            document.getElementById('tab-simulation').classList.remove('active');
+            document.getElementById('tab-psychology').classList.remove('active');
+
+            document.getElementById('view-' + tabName).classList.remove('hidden');
+            document.getElementById('tab-' + tabName).classList.add('active');
+
+            if (tabName === 'psychology' && !prospectChartInstance) {
+                renderProspectChart();
+            }
+        }
+
+        // --- Psychology Logic ---
+        function checkScenario(type, choice) {
+            const feedbackEl = document.getElementById(`feedback-${type}`);
+            feedbackEl.classList.remove('hidden');
+            
+            if (type === 'gain') {
+                if (choice === 'safe') {
+                    // Typical choice
+                    feedbackEl.className = "mt-3 p-3 rounded bg-orange-900/30 border border-orange-500/30 text-orange-200 text-sm";
+                    feedbackEl.innerHTML = "<strong>Ваш выбор:</strong> Гарантированные $900.<br><strong>Мат. ожидание (EV):</strong> $900.<br><strong>Альтернатива:</strong> 90% * $1000 = $900.<br><br>Математически они равны, но <strong>большинство людей выбирают ваш вариант</strong> из-за неприятия риска (Risk Aversion) в зоне прибыли. Мы боимся потерять синицу в руках.";
+                } else {
+                    feedbackEl.className = "mt-3 p-3 rounded bg-blue-900/30 border border-blue-500/30 text-blue-200 text-sm";
+                    feedbackEl.innerHTML = "<strong>Ваш выбор:</strong> Рискнуть ради $1000.<br>Вы действуете рационально (как робот), игнорируя страх потери гарантированного выигрыша. Это редкость.";
+                }
+            } else if (type === 'loss') {
+                if (choice === 'risky') {
+                    // Typical choice
+                    feedbackEl.className = "mt-3 p-3 rounded bg-red-900/30 border border-red-500/30 text-red-200 text-sm";
+                    feedbackEl.innerHTML = "<strong>Ваш выбор:</strong> Надежда избежать убытка (риск).<br><strong>Мат. ожидание (EV):</strong> -$900.<br><strong>Альтернатива:</strong> -$900.<br><br>Это классическая ловушка! Люди <strong>готовы рисковать</strong>, лишь бы не фиксировать убыток. Именно так маленькие просадки превращаются в катастрофу (Margin Call).";
+                } else {
+                    feedbackEl.className = "mt-3 p-3 rounded bg-green-900/30 border border-green-500/30 text-green-200 text-sm";
+                    feedbackEl.innerHTML = "<strong>Ваш выбор:</strong> Принять убыток $900.<br>Поздравляю! Вы обладаете дисциплиной фиксировать убытки. Это именно то, к чему призывает исследование в PDF.";
+                }
+            }
+        }
+
+        function renderProspectChart() {
+            const ctx = document.getElementById('prospectTheoryChart').getContext('2d');
+            
+            // Generate Curve Data
+            const dataGain = [];
+            const dataLoss = [];
+            
+            // x^0.88 for gains, -2.25 * (-x)^0.88 for losses
+            for (let i = 0; i <= 100; i+=5) {
+                dataGain.push({x: i, y: Math.pow(i, 0.6)}); // simplified power for visuals
+            }
+            for (let i = 0; i >= -100; i-=5) {
+                dataLoss.push({x: i, y: -2.5 * Math.pow(-i, 0.6)}); // steeper slope for losses
+            }
+
+            prospectChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: [
+                        {
+                            label: 'Удовольствие от прибыли',
+                            data: dataGain,
+                            borderColor: '#4ade80',
+                            borderWidth: 3,
+                            tension: 0.4
+                        },
+                        {
+                            label: 'Боль от потерь',
+                            data: dataLoss,
+                            borderColor: '#f87171',
+                            borderWidth: 3,
+                            tension: 0.4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { 
+                            callbacks: {
+                                label: function(context) {
+                                    return context.raw.y > 0 ? "Психологическая ценность (Радость)" : "Психологическая ценность (Боль)";
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            type: 'linear',
+                            position: 'center',
+                            grid: { color: '#334155', tickLength: 0 },
+                            ticks: { display: false },
+                            title: { display: true, text: 'Деньги ($)', color: '#94a3b8', align: 'end' }
+                        },
+                        y: {
+                            type: 'linear',
+                            position: 'center',
+                            grid: { color: '#334155' },
+                            ticks: { display: false },
+                            title: { display: true, text: 'Ценность', color: '#94a3b8', align: 'end' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- Modal Logic --- (Same as before)
+        function toggleModal() {
+            const modal = document.getElementById('helpModal');
+            const modalContent = modal.firstElementChild;
+            if (modal.classList.contains('hidden')) {
+                modal.classList.remove('hidden');
+                void modal.offsetWidth;
+                modal.classList.remove('opacity-0');
+                modalContent.classList.remove('scale-95');
+                modalContent.classList.add('scale-100');
+            } else {
+                modal.classList.add('opacity-0');
+                modalContent.classList.remove('scale-100');
+                modalContent.classList.add('scale-95');
+                setTimeout(() => { modal.classList.add('hidden'); }, 300);
+            }
+        }
+        document.getElementById('helpModal').addEventListener('click', function(e) {
+            if (e.target === this) toggleModal();
+        });
+
+        // --- Simulator Logic --- (Same as before)
         const startCapital = 10000;
-        const steps = 200; // Number of time periods
-        
+        const steps = 200; 
         const inputs = {
             winRate: document.getElementById('winRate'),
             profit: document.getElementById('profit'),
             loss: document.getElementById('loss'),
             positions: document.getElementById('positions')
         };
-
         const displays = {
             winRate: document.getElementById('winRateVal'),
             profit: document.getElementById('profitVal'),
@@ -166,7 +429,6 @@
 
         let chartInstance = null;
 
-        // --- Event Listeners ---
         Object.values(inputs).forEach(input => {
             input.addEventListener('input', updateDisplays);
         });
@@ -177,7 +439,6 @@
             displays.loss.textContent = '-' + inputs.loss.value + '%';
             displays.positions.textContent = inputs.positions.value;
 
-            // Math Expectation Calculation: (Win% * WinSize) - (Loss% * LossSize)
             const Pw = inputs.winRate.value / 100;
             const Pl = 1 - Pw;
             const Sw = inputs.profit.value / 100;
@@ -187,88 +448,59 @@
             displays.mathExp.textContent = (ev * 100).toFixed(2) + '%';
             displays.mathExp.className = `text-lg font-mono font-bold ${ev > 0 ? 'text-green-400' : 'text-red-400'}`;
 
-            // Warning Logic based on PDF (Kelly criterionish logic)
             if (parseInt(inputs.loss.value) > 20 && parseInt(inputs.positions.value) < 5) {
                 displays.lossWarning.style.opacity = 1;
                 displays.lossWarning.textContent = "Критически высокий риск для малого числа позиций!";
             } else if (ev < -0.1) {
                  displays.lossWarning.style.opacity = 1;
-                 displays.lossWarning.textContent = "Отрицательное мат. ожидание! Долгосрочный убыток гарантирован.";
+                 displays.lossWarning.textContent = "Отрицательное мат. ожидание!";
             } else {
                 displays.lossWarning.style.opacity = 0;
             }
         }
 
-        // --- Core Simulation Logic ---
         function runSimulation() {
-            const Pw = parseInt(inputs.winRate.value) / 100;
-            const Sw = parseInt(inputs.profit.value) / 100; // Profit multiplier (e.g., 1.0 for 100%)
-            const Sl = parseInt(inputs.loss.value) / 100;   // Loss multiplier (e.g., 0.5 for 50%)
-            const N = parseInt(inputs.positions.value);     // Number of concurrent positions
+            if (document.getElementById('view-simulation').classList.contains('hidden')) {
+                switchTab('simulation');
+            }
 
-            // Arrays to store history
+            const Pw = parseInt(inputs.winRate.value) / 100;
+            const Sw = parseInt(inputs.profit.value) / 100;
+            const Sl = parseInt(inputs.loss.value) / 100;
+            const N = parseInt(inputs.positions.value);
+
             const labels = Array.from({length: steps}, (_, i) => i);
             const soloData = [startCapital];
             const portfolioData = [startCapital];
 
-            // 1. SOLO TRADER SIMULATION (All-in on one sequence)
-            // This simulates "Time Probability" for one person
             let currentSolo = startCapital;
             for (let i = 1; i < steps; i++) {
-                if (currentSolo < 1) { // Bankrupt
-                    soloData.push(0);
-                    continue;
-                }
-                // Simulate 1 trade with 100% capital risk (or a large chunk)
-                // To be fair, let's say Solo trader risks 100% of capital on the series outcome
-                // Or simply: Balance * (1 + result)
+                if (currentSolo < 1) { soloData.push(0); continue; }
                 const outcome = Math.random();
-                if (outcome < Pw) {
-                    currentSolo = currentSolo * (1 + Sw);
-                } else {
-                    currentSolo = currentSolo * (1 - Sl);
-                }
+                if (outcome < Pw) { currentSolo = currentSolo * (1 + Sw); } else { currentSolo = currentSolo * (1 - Sl); }
                 soloData.push(currentSolo);
             }
 
-            // 2. PORTFOLIO SIMULATION (Ensemble Probability)
-            // Simulates dividing capital into N parts and rebalancing (Regeneration)
             let currentPortfolio = startCapital;
             for (let i = 1; i < steps; i++) {
-                if (currentPortfolio < 1) {
-                    portfolioData.push(0);
-                    continue;
-                }
-                
-                // Capital per trade (Equal weight)
+                if (currentPortfolio < 1) { portfolioData.push(0); continue; }
                 let tradeSize = currentPortfolio / N;
                 let stepPnL = 0;
-
-                // Simulate N independent events
                 for (let j = 0; j < N; j++) {
                     const outcome = Math.random();
-                    if (outcome < Pw) {
-                        stepPnL += tradeSize * Sw;
-                    } else {
-                        stepPnL -= tradeSize * Sl;
-                    }
+                    if (outcome < Pw) { stepPnL += tradeSize * Sw; } else { stepPnL -= tradeSize * Sl; }
                 }
-
                 currentPortfolio += stepPnL;
                 portfolioData.push(currentPortfolio);
             }
 
-            // Update UI Numbers
             displays.resSolo.textContent = formatMoney(soloData[steps - 1]);
             displays.resSolo.className = `text-lg font-mono font-bold ${soloData[steps-1] > startCapital ? 'text-green-500' : 'text-red-500'}`;
             
             displays.resPort.textContent = formatMoney(portfolioData[steps - 1]);
             displays.resPort.className = `text-lg font-mono font-bold ${portfolioData[steps-1] > startCapital ? 'text-green-500' : 'text-red-500'}`;
 
-            // Generate Insight
             generateInsight(soloData[steps-1], portfolioData[steps-1], N, Sl, Sw, Pw);
-
-            // Render Chart
             renderChart(labels, soloData, portfolioData);
         }
 
@@ -285,29 +517,23 @@
             const ev = (Pw * Sw) - ((1-Pw) * Sl);
 
             if (ev < 0 && N > 8 && portRes > startCapital * 0.5) {
-                // Negative EV but Portfolio survived longer
-                text = "Даже при отрицательном мат. ожидании диверсификация (10+ позиций) позволяет капиталу жить дольше, давая шанс поймать 'Удачу', в то время как одиночный игрок быстро разоряется.";
+                text = "Даже при отрицательном мат. ожидании диверсификация позволяет жить дольше, давая шанс поймать удачу.";
             } else if (soloRes < 100 && portRes > startCapital) {
-                // Classic Taleb scenario
-                text = "Классический пример 'Ошибки выжившего'. Одиночный игрок взял на себя риск разорения и проиграл. Портфельный подход сгладил волатильность и позволил реализовать мат. преимущество.";
+                text = "Классический пример 'Ошибки выжившего'. Одиночный игрок проиграл из-за волатильности, портфель выжил.";
             } else if (Sl >= 0.5 && N < 5) {
-                text = "Вы выбрали огромный риск (50%+) при слабой диверсификации. Согласно исследованию, это гарантированный путь к обнулению счета.";
+                text = "Слишком высокий риск (50%+) при слабой диверсификации. Гарантированный путь к обнулению.";
             } else if (portRes > soloRes * 10) {
-                text = "Сила 'Регенерации' и Диверсификации в действии! Плавная кривая роста портфеля значительно опережает хаотичные скачки одиночной ставки.";
+                text = "Сила 'Регенерации' в действии! Плавная кривая роста портфеля значительно опережает скачки одиночной ставки.";
             } else {
-                text = "Сравните плавность линий. Зеленая линия (Портфель) показывает, как снижение риска на одну сделку превращает случайность в системный доход.";
+                text = "Зеленая линия (Портфель) показывает, как системный подход превращает случайность в доход.";
             }
             displays.insightText.textContent = text;
         }
 
         function renderChart(labels, soloData, portfolioData) {
             const ctx = document.getElementById('simulationChart').getContext('2d');
-            
-            if (chartInstance) {
-                chartInstance.destroy();
-            }
+            if (chartInstance) chartInstance.destroy();
 
-            // Create gradient
             let gradientGreen = ctx.createLinearGradient(0, 0, 0, 400);
             gradientGreen.addColorStop(0, 'rgba(34, 197, 94, 0.5)');
             gradientGreen.addColorStop(1, 'rgba(34, 197, 94, 0)');
@@ -322,9 +548,9 @@
                     labels: labels,
                     datasets: [
                         {
-                            label: 'Диверсифицированный Портфель',
+                            label: 'Портфель (Казино)',
                             data: portfolioData,
-                            borderColor: '#22c55e', // Green-500
+                            borderColor: '#22c55e',
                             backgroundColor: gradientGreen,
                             borderWidth: 2,
                             pointRadius: 0,
@@ -332,9 +558,9 @@
                             tension: 0.1
                         },
                         {
-                            label: 'Одиночная серия (Ва-банк)',
+                            label: 'Игрок (Ва-банк)',
                             data: soloData,
-                            borderColor: '#ef4444', // Red-500
+                            borderColor: '#ef4444',
                             backgroundColor: gradientRed,
                             borderWidth: 1,
                             borderDash: [5, 5],
@@ -347,46 +573,21 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    interaction: {
-                        mode: 'index',
-                        intersect: false,
-                    },
+                    interaction: { mode: 'index', intersect: false },
                     plugins: {
-                        legend: {
-                            labels: { color: '#94a3b8' }
-                        },
-                        tooltip: {
-                            backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                            titleColor: '#e2e8f0',
-                            bodyColor: '#e2e8f0',
-                            borderColor: '#334155',
-                            borderWidth: 1
-                        }
+                        legend: { labels: { color: '#94a3b8' } },
+                        tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.9)', titleColor: '#e2e8f0', bodyColor: '#e2e8f0', borderColor: '#334155', borderWidth: 1 }
                     },
                     scales: {
-                        x: {
-                            display: false, // Hide x-axis labels for cleaner look
-                            grid: { display: false }
-                        },
-                        y: {
-                            type: 'logarithmic', // Log scale is crucial for wealth visualization
-                            grid: { color: '#334155' },
-                            ticks: {
-                                color: '#94a3b8',
-                                callback: function(value) {
-                                    return '$' + Number(value).toLocaleString();
-                                }
-                            }
-                        }
+                        x: { display: false },
+                        y: { type: 'logarithmic', grid: { color: '#334155' }, ticks: { color: '#94a3b8', callback: function(value) { return '$' + Number(value).toLocaleString(); } } }
                     }
                 }
             });
         }
 
-        // Init
         updateDisplays();
         runSimulation();
-
     </script>
 </body>
 </html>
