@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Трейдер: Игры Разума | Лаборатория v6</title>
+    <title>Трейдер: Игры Разума | Лаборатория v7</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -71,7 +71,7 @@
     <div id="view-simulation" class="flex flex-1 overflow-hidden relative">
         <aside class="w-full md:w-80 bg-slate-900 border-r border-gray-700 overflow-y-auto p-6 flex flex-col gap-6 z-10 shadow-2xl">
             <div class="p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg">
-                <h3 class="text-blue-400 font-bold mb-1 text-sm">База из PDF:</h3>
+                <h3 class="text-blue-400 font-bold mb-1 text-sm">Математическая модель</h3>
                 <p class="text-xs text-gray-400">Здесь мы моделируем "Матожидание" и "Диверсификацию".</p>
             </div>
             
@@ -79,19 +79,19 @@
                 <h2 class="text-xs uppercase tracking-wider text-gray-500 font-semibold">Настройки</h2>
                 <div>
                     <label class="text-sm text-gray-300 flex justify-between"><span>Win Rate</span> <span id="winRateVal" class="text-cyan-400">50%</span></label>
-                    <input type="range" id="winRate" min="10" max="90" value="50" class="w-full h-2 bg-gray-700 rounded-lg slider-thumb">
+                    <input type="range" id="winRate" min="10" max="90" value="50" class="w-full h-2 bg-gray-700 rounded-lg slider-thumb" oninput="document.getElementById('winRateVal').innerText = this.value + '%'">
                 </div>
                 <div>
                     <label class="text-sm text-gray-300 flex justify-between"><span>Take Profit</span> <span id="profitVal" class="text-green-400">+100%</span></label>
-                    <input type="range" id="profit" min="10" max="300" value="100" class="w-full h-2 bg-gray-700 rounded-lg slider-thumb">
+                    <input type="range" id="profit" min="10" max="300" value="100" class="w-full h-2 bg-gray-700 rounded-lg slider-thumb" oninput="document.getElementById('profitVal').innerText = '+' + this.value + '%'">
                 </div>
                 <div>
                     <label class="text-sm text-gray-300 flex justify-between"><span>Stop Loss</span> <span id="lossVal" class="text-red-400">-50%</span></label>
-                    <input type="range" id="loss" min="10" max="90" value="50" class="w-full h-2 bg-gray-700 rounded-lg slider-thumb">
+                    <input type="range" id="loss" min="10" max="90" value="50" class="w-full h-2 bg-gray-700 rounded-lg slider-thumb" oninput="document.getElementById('lossVal').innerText = '-' + this.value + '%'">
                 </div>
                 <div>
                     <label class="text-sm text-gray-300 flex justify-between"><span>Позиций</span> <span id="positionsVal" class="text-purple-400">10</span></label>
-                    <input type="range" id="positions" min="1" max="50" value="10" class="w-full h-2 bg-gray-700 rounded-lg slider-thumb">
+                    <input type="range" id="positions" min="1" max="50" value="10" class="w-full h-2 bg-gray-700 rounded-lg slider-thumb" oninput="document.getElementById('positionsVal').innerText = this.value">
                 </div>
             </div>
             <button onclick="runSimulation()" class="w-full py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded shadow-lg transition transform active:scale-95">Рассчитать</button>
