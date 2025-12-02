@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Трейдер: Игры Разума | Лаборатория v11</title>
+    <title>Трейдер: Игры Разума | Лаборатория v13</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -49,6 +49,18 @@
         }
         .hidden-answer { filter: blur(5px); transition: filter 0.5s ease; }
         .revealed { filter: blur(0); }
+        
+        /* Tooltip Arrow */
+        .tooltip-arrow::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #1e293b transparent transparent transparent;
+        }
     </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden">
@@ -172,18 +184,41 @@
         <main class="flex-1 p-4 md:p-8 flex flex-col">
             <!-- Метрики -->
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4 px-4 text-center">
+                <!-- EV -->
                 <div>
                     <div class="text-xs text-gray-500">Мат. ожидание сделки</div>
                     <div id="mathExp" class="text-xl font-bold text-gray-200">0%</div>
                 </div>
-                <div>
-                    <div class="text-xs text-gray-500">Результат "Ва-банк"</div>
+                
+                <!-- Solo (Tooltip Added) -->
+                <div class="relative group cursor-help">
+                    <div class="text-xs text-gray-500 flex items-center justify-center gap-1">
+                        Результат "Ва-банк"
+                        <span class="w-4 h-4 rounded-full bg-slate-700 text-gray-300 flex items-center justify-center text-[10px] font-bold">?</span>
+                    </div>
                     <div id="resSolo" class="text-xl font-bold text-red-500">$0</div>
+                    <!-- Tooltip -->
+                    <div class="tooltip-arrow absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 p-3 bg-slate-800 text-gray-300 text-xs text-left rounded-lg shadow-xl border border-slate-600 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 leading-relaxed">
+                        <strong class="text-white">Time Probability (Талеб).</strong><br>
+                        Это результат, если вы ставите всё на одну серию сделок (1 актив). Здесь работает "черная полоса": одна ошибка может убить депозит. Это путь одиночки.
+                    </div>
                 </div>
-                <div>
-                    <div class="text-xs text-gray-500">Результат "Портфеля"</div>
+
+                <!-- Portfolio (Tooltip Added) -->
+                <div class="relative group cursor-help">
+                    <div class="text-xs text-gray-500 flex items-center justify-center gap-1">
+                        Результат "Портфеля"
+                        <span class="w-4 h-4 rounded-full bg-slate-700 text-gray-300 flex items-center justify-center text-[10px] font-bold">?</span>
+                    </div>
                     <div id="resPort" class="text-xl font-bold text-green-500">$0</div>
+                    <!-- Tooltip -->
+                    <div class="tooltip-arrow absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 p-3 bg-slate-800 text-gray-300 text-xs text-left rounded-lg shadow-xl border border-slate-600 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 leading-relaxed">
+                        <strong class="text-white">Ensemble Probability.</strong><br>
+                        Результат, если капитал разделен на N независимых частей. Убытки одних идей перекрываются прибылью других. Это путь казино и фондов.
+                    </div>
                 </div>
+
+                <!-- MaxDD -->
                 <div>
                     <div class="text-xs text-gray-500">Макс. просадка портфеля</div>
                     <div id="maxDDPort" class="text-xl font-bold text-gray-200">0%</div>
@@ -357,9 +392,54 @@
         }
 
         // ==========================================
-        // MARKET LIFE GAME LOGIC
+        // DATA SETS
         // ==========================================
-        let mlState = { capital: 100, round: 1, maxRounds: 25, offspring: 0, history: [], emotions: [] };
+        const anchorQuestions = [
+            { anchor: 65000, question: "Цена Биткоина в следующем месяце будет выше или ниже $65,000?", real: "35000" },
+            { anchor: 100, question: "Сколько лет прожил самый старый человек? Больше или меньше 100?", real: "122" },
+            { anchor: 10, question: "Какой процент стран в ООН из Африки? Больше или меньше 10%?", real: "28" },
+            { anchor: 5000, question: "Высота Эвереста в метрах больше или меньше 5000?", real: "8848" },
+            { anchor: 1500, question: "Сколько стоил первый iPhone? Больше или меньше $1500?", real: "499" },
+            { anchor: 1000000, question: "Население Исландии больше или меньше 1,000,000?", real: "372000" },
+            { anchor: 30, question: "Сколько зубов у белой акулы? Больше или меньше 30?", real: "300" },
+            { anchor: 1990, question: "В каком году родился Илон Маск? Позже или раньше 1990?", real: "1971" },
+            { anchor: 500, question: "Сколько картин продал Ван Гог при жизни? Больше или меньше 500?", real: "1" },
+            { anchor: 100, question: "Сколько минут длится футбольный матч? Больше или меньше 100?", real: "90" },
+            { anchor: 50, question: "Сколько штатов в США? Больше или меньше 50?", real: "50" },
+            { anchor: 1000, question: "Сколько стоит акция Apple? Больше или меньше $1000?", real: "180" },
+            { anchor: 2025, question: "В каком году человек ступил на Луну? Раньше или позже 2025?", real: "1969" },
+            { anchor: 10, question: "Сколько симфоний написал Бетховен? Больше или меньше 10?", real: "9" },
+            { anchor: 500, question: "Сколько костей в теле человека? Больше или меньше 500?", real: "206" },
+            { anchor: 100, question: "Сколько градусов кипения воды? Больше или меньше 100?", real: "100" },
+            { anchor: 1000, question: "Сколько километров в миле? Больше или меньше 1000?", real: "1.6" },
+            { anchor: 30, question: "Сколько дней в феврале високосного года? Больше или меньше 30?", real: "29" },
+            { anchor: 100, question: "Сколько центов в долларе? Больше или меньше 100?", real: "100" },
+            { anchor: 5000, question: "Сколько метров в километре? Больше или меньше 5000?", real: "1000" }
+        ];
+
+        const herdScenarios = [
+            { sentiment: 92, trend: "down", asset: "Crypto", context: "Все гуру кричат BUY, но график пробил поддержку." },
+            { sentiment: 15, trend: "up", asset: "Gold", context: "Никто не верит в золото, но оно обновляет хаи." },
+            { sentiment: 88, trend: "down", asset: "Tech Stocks", context: "Пузырь ИИ? Все покупают, но инсайдеры выходят." },
+            { sentiment: 10, trend: "up", asset: "Oil", context: "Нефть никому не нужна, но запасы на минимуме." },
+            { sentiment: 95, trend: "down", asset: "Meme Coin", context: "Туземун! Но разработчики продают." },
+            { sentiment: 20, trend: "up", asset: "Bonds", context: "Скучно? Но доходность растет." },
+            { sentiment: 90, trend: "down", asset: "Real Estate", context: "Цены на пике, ипотека дорожает, но все берут." },
+            { sentiment: 30, trend: "up", asset: "Utilities", context: "Защитный актив растет, пока рынок падает." },
+            { sentiment: 85, trend: "down", asset: "IPO", context: "Горячее размещение, но бизнес убыточен." },
+            { sentiment: 25, trend: "up", asset: "Emerging Markets", context: "Страх дефолта, но активы дешевы." },
+            { sentiment: 98, trend: "down", asset: "NFT", context: "Картинки по миллиону, но объемы падают." },
+            { sentiment: 5, trend: "up", asset: "Silver", context: "Забытый металл начинает сиять." },
+            { sentiment: 93, trend: "down", asset: "SP500", context: "Рецессия на пороге, но индексы на хаях." },
+            { sentiment: 12, trend: "up", asset: "Corn", context: "Засуха, но никто не смотрит на агро." },
+            { sentiment: 89, trend: "down", asset: "Tesla", context: "Фанаты держат, но конкуренты давят." },
+            { sentiment: 18, trend: "up", asset: "Value Stocks", context: "Старая экономика оживает." },
+            { sentiment: 96, trend: "down", asset: "AI Startup", context: "Очередной 'убийца Google' без продукта." },
+            { sentiment: 8, trend: "up", asset: "Yen", context: "Валюта на дне, ЦБ меняет политику." },
+            { sentiment: 91, trend: "down", asset: "Luxury", context: "Спрос падает, но бренд держит цену." },
+            { sentiment: 22, trend: "up", asset: "Copper", context: "Зеленая энергетика требует меди." }
+        ];
+
         const mlNews = [
             { text: "ФРС намекает на снижение ставки. Рынок в эйфории!", type: "greed" },
             { text: "Известный банк объявил о проблемах с ликвидностью.", type: "fear" },
@@ -377,6 +457,11 @@
             { text: "Рынок растет 10 дней подряд без откатов.", type: "greed" },
             { text: "Неожиданное банкротство брокера.", type: "fear" }
         ];
+
+        // ==========================================
+        // MARKET LIFE GAME LOGIC
+        // ==========================================
+        let mlState = { capital: 100, round: 1, maxRounds: 25, offspring: 0, history: [], emotions: [] };
 
         function renderMarketLifeGame(container) {
             mlState = { capital: 100, round: 1, maxRounds: 25, offspring: 0, history: [], emotions: [] };
@@ -519,6 +604,29 @@
         function questRound3() {
             const content = document.getElementById('game-content');
             content.innerHTML = `<div class="max-w-3xl mx-auto"><div class="flex justify-between items-center mb-6"><h3 class="text-2xl font-bold text-blue-400">Раунд 3: Правда, ложь и самообман</h3><span class="text-sm text-gray-500">По Полу Экману</span></div><div class="bg-slate-800 p-8 rounded-xl text-center mb-8 relative"><div class="text-6xl mb-4">🤥</div><h4 class="text-xl font-bold text-white mb-4">Заявление трейдера:</h4><p class="text-2xl italic text-gray-300 mb-8">"Я никогда не усредняю убыточную позицию, если этого нет в плане."</p><div class="flex justify-center gap-6"><button onclick="checkLie(true)" class="px-8 py-3 bg-green-900/50 border border-green-500 hover:bg-green-900 rounded-lg text-green-400 font-bold">Верю</button><button onclick="checkLie(false)" class="px-8 py-3 bg-red-900/50 border border-red-500 hover:bg-red-900 rounded-lg text-red-400 font-bold">Не верю</button></div></div><div id="lieResult" class="hidden p-6 bg-slate-900 border-l-4 border-blue-500 rounded animate-fade-in"><h4 class="font-bold text-white mb-2">Разбор:</h4><p class="text-gray-300 mb-4">Это самая частая <strong>Ложь Самому Себе</strong>. Большинство трейдеров придумывают "рациональные" причины для усреднения.</p><button onclick="showFinalPassport()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded shadow-lg">Получить Паспорт Искажений</button></div></div>`;
+        }
+        function checkLie(choice) { document.getElementById('lieResult').classList.remove('hidden'); if(choice) questState.distortions.push("Наивный реализм (Слепота к лжи)"); }
+
+        // --- FINAL: PASSPORT ---
+        function showFinalPassport() {
+            const list = questState.distortions.length > 0 ? questState.distortions.map(d => `<li class="mb-2 text-red-300">⚠️ ${d}</li>`).join('') : `<li class="text-green-400">Вы действовали на удивление рационально!</li>`;
+            const content = document.getElementById('game-content');
+            content.innerHTML = `
+                <div class="max-w-2xl mx-auto text-center pt-6">
+                    <div class="bg-white text-slate-900 p-8 rounded-lg shadow-2xl relative overflow-hidden transform rotate-1 hover:rotate-0 transition duration-500">
+                        <div class="absolute top-0 left-0 w-full h-4 bg-indigo-500"></div>
+                        <h2 class="text-3xl font-bold text-slate-800 mb-2 mt-4 uppercase tracking-widest">Паспорт Искажений</h2>
+                        <p class="text-slate-500 text-sm mb-6 border-b border-slate-300 pb-4">Личный профиль когнитивных ловушек</p>
+                        <div class="text-left mb-8"><h4 class="font-bold text-slate-700 mb-2">Обнаруженные уязвимости:</h4><ul class="list-none">${list}</ul></div>
+                        <div class="text-left bg-slate-100 p-4 rounded text-sm text-slate-600"><strong>Рекомендация:</strong><br>Перед каждой сделкой берите паузу в 1 минуту, чтобы включить Систему 2.</div>
+                        <div class="mt-8 pt-4 border-t border-slate-200 flex justify-between items-center"><div class="text-xs text-slate-400">Лаборатория v5</div><div class="font-mono font-bold text-indigo-600 text-xl">Kapital: $${questState.capital.toFixed(0)}</div></div>
+                    </div>
+                    <div class="flex justify-center gap-4 mt-8">
+                        <button onclick="startQuest()" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded shadow transition">ОК (Пройти заново)</button>
+                        <button onclick="closeGame()" class="px-6 py-2 text-gray-400 hover:text-white underline">Вернуться в меню</button>
+                    </div>
+                </div>
+            `;
         }
 
         // --- MATH SIMULATOR & RISK LOGIC ---
@@ -693,51 +801,6 @@
         runSimulation();
 
         // Standard Game Renderers (Existing)
-        const anchorQuestions = [
-            { anchor: 65000, question: "Цена Биткоина в следующем месяце будет выше или ниже $65,000?", real: "35000" },
-            { anchor: 100, question: "Сколько лет прожил самый старый человек? Больше или меньше 100?", real: "122" },
-            { anchor: 10, question: "Какой процент стран в ООН из Африки? Больше или меньше 10%?", real: "28" },
-            { anchor: 5000, question: "Высота Эвереста в метрах больше или меньше 5000?", real: "8848" },
-            { anchor: 1500, question: "Сколько стоил первый iPhone? Больше или меньше $1500?", real: "499" },
-            { anchor: 1000000, question: "Население Исландии больше или меньше 1,000,000?", real: "372000" },
-            { anchor: 30, question: "Сколько зубов у белой акулы? Больше или меньше 30?", real: "300" },
-            { anchor: 1990, question: "В каком году родился Илон Маск? Позже или раньше 1990?", real: "1971" },
-            { anchor: 500, question: "Сколько картин продал Ван Гог при жизни? Больше или меньше 500?", real: "1" },
-            { anchor: 100, question: "Сколько минут длится футбольный матч? Больше или меньше 100?", real: "90" },
-            { anchor: 50, question: "Сколько штатов в США? Больше или меньше 50?", real: "50" },
-            { anchor: 1000, question: "Сколько стоит акция Apple? Больше или меньше $1000?", real: "180" },
-            { anchor: 2025, question: "В каком году человек ступил на Луну? Раньше или позже 2025?", real: "1969" },
-            { anchor: 10, question: "Сколько симфоний написал Бетховен? Больше или меньше 10?", real: "9" },
-            { anchor: 500, question: "Сколько костей в теле человека? Больше или меньше 500?", real: "206" },
-            { anchor: 100, question: "Сколько градусов кипения воды? Больше или меньше 100?", real: "100" },
-            { anchor: 1000, question: "Сколько километров в миле? Больше или меньше 1000?", real: "1.6" },
-            { anchor: 30, question: "Сколько дней в феврале високосного года? Больше или меньше 30?", real: "29" },
-            { anchor: 100, question: "Сколько центов в долларе? Больше или меньше 100?", real: "100" },
-            { anchor: 5000, question: "Сколько метров в километре? Больше или меньше 5000?", real: "1000" }
-        ];
-        const herdScenarios = [
-            { sentiment: 92, trend: "down", asset: "Crypto", context: "Все гуру кричат BUY, но график пробил поддержку." },
-            { sentiment: 15, trend: "up", asset: "Gold", context: "Никто не верит в золото, но оно обновляет хаи." },
-            { sentiment: 88, trend: "down", asset: "Tech Stocks", context: "Пузырь ИИ? Все покупают, но инсайдеры выходят." },
-            { sentiment: 10, trend: "up", asset: "Oil", context: "Нефть никому не нужна, но запасы на минимуме." },
-            { sentiment: 95, trend: "down", asset: "Meme Coin", context: "Туземун! Но разработчики продают." },
-            { sentiment: 20, trend: "up", asset: "Bonds", context: "Скучно? Но доходность растет." },
-            { sentiment: 90, trend: "down", asset: "Real Estate", context: "Цены на пике, ипотека дорожает, но все берут." },
-            { sentiment: 30, trend: "up", asset: "Utilities", context: "Защитный актив растет, пока рынок падает." },
-            { sentiment: 85, trend: "down", asset: "IPO", context: "Горячее размещение, но бизнес убыточен." },
-            { sentiment: 25, trend: "up", asset: "Emerging Markets", context: "Страх дефолта, но активы дешевы." },
-            { sentiment: 98, trend: "down", asset: "NFT", context: "Картинки по миллиону, но объемы падают." },
-            { sentiment: 5, trend: "up", asset: "Silver", context: "Забытый металл начинает сиять." },
-            { sentiment: 93, trend: "down", asset: "SP500", context: "Рецессия на пороге, но индексы на хаях." },
-            { sentiment: 12, trend: "up", asset: "Corn", context: "Засуха, но никто не смотрит на агро." },
-            { sentiment: 89, trend: "down", asset: "Tesla", context: "Фанаты держат, но конкуренты давят." },
-            { sentiment: 18, trend: "up", asset: "Value Stocks", context: "Старая экономика оживает." },
-            { sentiment: 96, trend: "down", asset: "AI Startup", context: "Очередной 'убийца Google' без продукта." },
-            { sentiment: 8, trend: "up", asset: "Yen", context: "Валюта на дне, ЦБ меняет политику." },
-            { sentiment: 91, trend: "down", asset: "Luxury", context: "Спрос падает, но бренд держит цену." },
-            { sentiment: 22, trend: "up", asset: "Copper", context: "Зеленая энергетика требует меди." }
-        ];
-
         function renderAnchorGame(container) {
             const q = anchorQuestions[Math.floor(Math.random() * anchorQuestions.length)];
             container.innerHTML = `<h2 class="text-2xl font-bold text-yellow-400 mb-4">Эффект Якоря</h2><div id="anchor-demo" class="p-6 bg-slate-800 rounded-xl"><p class="text-lg text-white mb-4">Вращаем колесо... Выпало: <strong>${q.anchor}</strong></p><p class="mb-4 text-gray-300">${q.question}</p><div class="flex gap-4"><button class="px-4 py-2 bg-gray-700 rounded hover:bg-gray-600" onclick="this.parentElement.nextElementSibling.classList.remove('hidden')">Больше</button><button class="px-4 py-2 bg-gray-700 rounded hover:bg-gray-600" onclick="this.parentElement.nextElementSibling.classList.remove('hidden')">Меньше</button></div><div class="hidden mt-4 p-4 bg-slate-900 rounded border-l-4 border-yellow-500 animate-fade-in"><p class="text-sm mb-2">Правильный ответ: <strong>${q.real}</strong></p><p class="text-xs text-gray-400">Число ${q.anchor} было "Якорем". Если бы оно было другим, ваш интуитивный ответ тоже сместился бы.</p></div><div class="flex justify-center gap-4 mt-6"><button onclick="renderAnchorGame(document.getElementById('game-content'))" class="px-6 py-2 bg-yellow-600 hover:bg-yellow-500 text-white rounded font-bold shadow">Следующий вопрос</button><button onclick="closeGame()" class="px-6 py-2 text-gray-400 hover:text-white underline">В меню</button></div></div>`;
