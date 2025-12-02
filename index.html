@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Трейдер: Игры Разума | Лаборатория v4</title>
+    <title>Трейдер: Игры Разума | Лаборатория v5</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -130,8 +130,8 @@
             <!-- Game Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="game-grid">
                 
-                <!-- QUEST CARD (NEW) -->
-                <div onclick="startQuest()" class="col-span-1 md:col-span-2 lg:col-span-3 game-card bg-gradient-to-r from-indigo-900 to-purple-900 border border-indigo-500 p-6 rounded-2xl relative overflow-hidden group shadow-2xl">
+                <!-- QUEST CARD -->
+                <div onclick="startQuest()" class="col-span-1 md:col-span-2 lg:col-span-3 game-card bg-gradient-to-r from-indigo-900 to-purple-900 border border-indigo-500 p-6 rounded-2xl relative overflow-hidden group shadow-2xl cursor-pointer">
                     <div class="absolute top-0 right-0 p-6 opacity-20 group-hover:opacity-30 text-8xl">🧬</div>
                     <div class="relative z-10">
                         <div class="flex items-center gap-3 mb-2">
@@ -139,9 +139,7 @@
                             <h3 class="text-2xl font-bold text-white">Лаборатория Решений</h3>
                         </div>
                         <p class="text-indigo-200 mb-6 max-w-2xl">
-                            Пройдите 3 раунда экспериментов, чтобы поймать свой мозг на ошибках. 
-                            Узнайте свои слабые места: от "Быстрого мозга" Канемана до "Эмоционального рынка" Наймана.
-                            В конце вы получите личный "Паспорт искажений".
+                            Пройдите 3 раунда экспериментов (Канеман, Найман, Экман) и получите "Паспорт искажений".
                         </p>
                         <button class="px-6 py-2 bg-indigo-500 hover:bg-indigo-400 text-white font-bold rounded shadow-lg transition">Начать Исследование →</button>
                     </div>
@@ -166,6 +164,13 @@
                     <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 text-6xl">😡</div>
                     <h3 class="text-xl font-bold text-white mb-2">Детектор Тильта</h3>
                     <p class="text-sm text-gray-400 mb-4">Чекап эмоций перед торгами по Экману.</p>
+                </div>
+
+                <!-- GAME 4: PROSPECT THEORY (RESTORED) -->
+                <div onclick="openGame('prospect')" class="game-card glass-panel p-6 rounded-2xl border-t-4 border-green-500 relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 text-6xl">⚖️</div>
+                    <h3 class="text-xl font-bold text-white mb-2">Цена Страха</h3>
+                    <p class="text-sm text-gray-400 mb-4">Классический эксперимент Канемана: Синица в руках или Журавль в небе?</p>
                 </div>
 
             </div>
@@ -208,17 +213,13 @@
             if(gameId === 'anchor') renderAnchorGame(content);
             if(gameId === 'herd') renderHerdGame(content);
             if(gameId === 'emotion') renderEmotionGame(content);
+            if(gameId === 'prospect') renderProspectGame(content); // Now handled correctly
         }
 
         // ==========================================
-        // QUEST LOGIC (NEW BLOCK)
+        // QUEST LOGIC
         // ==========================================
-        
-        let questState = {
-            distortions: [], // Collected biases
-            capital: 100,
-            round: 0
-        };
+        let questState = { distortions: [], capital: 100, round: 0 };
 
         function startQuest() {
             questState = { distortions: [], capital: 100, round: 0 };
@@ -256,7 +257,7 @@
             `;
         }
 
-        // --- ROUND 1: KAHNEMAN (Fast Brain) ---
+        // --- ROUND 1: KAHNEMAN ---
         function questRound1() {
             const content = document.getElementById('game-content');
             content.innerHTML = `
@@ -265,7 +266,6 @@
                         <h3 class="text-2xl font-bold text-yellow-400">Раунд 1: Быстрый мозг</h3>
                         <span class="text-sm text-gray-500">Система 1 vs Система 2</span>
                     </div>
-
                     <!-- Task 1: Bat & Ball -->
                     <div id="q1-block" class="mb-8 p-6 bg-slate-800 rounded-xl animate-fade-in">
                         <p class="text-lg mb-4"><strong>Задача 1.</strong> Бита и мяч вместе стоят $1.10. Бита стоит на $1.00 дороже мяча. Сколько стоит мяч?</p>
@@ -275,7 +275,6 @@
                         </div>
                         <div id="batResult" class="hidden text-sm p-4 bg-slate-900 rounded"></div>
                     </div>
-
                     <!-- Task 2: Anchoring -->
                     <div id="q2-block" class="hidden mb-8 p-6 bg-slate-800 rounded-xl animate-fade-in">
                         <p class="text-lg mb-4"><strong>Задача 2.</strong> Вращаем колесо фортуны... Выпало число <strong>65</strong>.</p>
@@ -293,7 +292,6 @@
                         </div>
                          <div id="anchorResult" class="hidden text-sm mt-4 p-4 bg-slate-900 rounded"></div>
                     </div>
-
                      <!-- Task 3: Framing -->
                     <div id="q3-block" class="hidden mb-8 p-6 bg-slate-800 rounded-xl animate-fade-in">
                         <p class="text-lg mb-4"><strong>Задача 3.</strong> Выберите метод лечения:</p>
@@ -309,7 +307,6 @@
                         </div>
                         <div id="frameResult" class="hidden text-sm p-4 bg-slate-900 rounded"></div>
                     </div>
-
                     <div id="r1-next" class="hidden text-center mt-8">
                          <button onclick="questRound2()" class="px-8 py-3 bg-yellow-600 hover:bg-yellow-500 text-white font-bold rounded shadow-lg">Перейти к Раунду 2</button>
                     </div>
@@ -332,35 +329,27 @@
             }
             document.getElementById('q2-block').classList.remove('hidden');
         }
-
-        function showAnchorInput() {
-            document.getElementById('anchorInputBlock').classList.remove('hidden');
-        }
-
+        function showAnchorInput() { document.getElementById('anchorInputBlock').classList.remove('hidden'); }
         function checkAnchor() {
             const val = parseInt(document.getElementById('africaInput').value);
             const res = document.getElementById('anchorResult');
             res.classList.remove('hidden');
-            res.innerHTML = "<strong>Эффект Привязки:</strong> Число 65 не имеет отношения к вопросу, но оно 'притянуло' ваш ответ вверх. Реальный ответ около 28%. Если бы рулетка показала 10, вы бы назвали число меньше.";
+            res.innerHTML = "<strong>Эффект Привязки:</strong> Число 65 не имеет отношения к вопросу, но оно 'притянуло' ваш ответ вверх. Реальный ответ около 28%.";
             questState.distortions.push("Эффект Якоря (Привязка)");
             document.getElementById('q3-block').classList.remove('hidden');
         }
-
         function checkFrame(choice) {
             const res = document.getElementById('frameResult');
             res.classList.remove('hidden');
-            res.innerHTML = "<strong>Эффект Фрейминга:</strong> Это статистически одинаковые варианты. Но 90% людей выбирают 'Выживаемость' (позитивный фрейм) и отвергают 'Смертность'. На рынке так же: 'Шанс заработать' vs 'Риск потерять'.";
+            res.innerHTML = "<strong>Эффект Фрейминга:</strong> Это статистически одинаковые варианты. Но 90% людей выбирают 'Выживаемость'. На рынке так же: 'Шанс заработать' vs 'Риск потерять'.";
             if(choice === 'A') questState.distortions.push("Зависимость от Фрейминга");
             document.getElementById('r1-next').classList.remove('hidden');
         }
 
         // --- ROUND 2: NAIMAN (Emotional Market) ---
-        let marketRound = 0;
-        let marketHistory = [];
-        
+        let marketRound = 0; let marketHistory = [];
         function questRound2() {
-            marketRound = 0;
-            marketHistory = [100];
+            marketRound = 0; marketHistory = [100];
             const content = document.getElementById('game-content');
             content.innerHTML = `
                 <div class="max-w-4xl mx-auto">
@@ -368,19 +357,11 @@
                         <h3 class="text-2xl font-bold text-red-400">Раунд 2: Эмоциональный рынок</h3>
                         <div class="text-xl font-mono">Капитал: <span id="qCapital" class="text-green-400">$100</span></div>
                     </div>
-                    
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <!-- Market Area -->
                         <div class="glass-panel p-6 rounded-xl relative">
-                            <div id="market-news" class="mb-4 h-24 flex items-center justify-center text-center text-lg italic text-gray-300">
-                                "Рынок открывается спокойно..."
-                            </div>
-                            <div class="h-48 w-full bg-slate-900 rounded mb-4 relative">
-                                <canvas id="questChart"></canvas>
-                            </div>
+                            <div id="market-news" class="mb-4 h-24 flex items-center justify-center text-center text-lg italic text-gray-300">"Рынок открывается..."</div>
+                            <div class="h-48 w-full bg-slate-900 rounded mb-4 relative"><canvas id="questChart"></canvas></div>
                         </div>
-
-                        <!-- Control Area -->
                         <div class="space-y-6">
                             <div>
                                 <label class="text-sm text-gray-400">Ваша эмоция сейчас:</label>
@@ -392,13 +373,11 @@
                                     <option value="regret">Сожаление</option>
                                 </select>
                             </div>
-                            
                             <div>
                                 <label class="text-sm text-gray-400">Размер ставки (% от капитала):</label>
                                 <input type="range" id="qBet" min="0" max="50" value="10" class="w-full h-2 bg-gray-700 rounded-lg slider-thumb mt-2" oninput="document.getElementById('qBetVal').innerText=this.value+'%'">
                                 <div class="text-right text-xs text-cyan-400 font-bold" id="qBetVal">10%</div>
                             </div>
-
                             <div class="flex gap-4">
                                 <button onclick="makeTrade(1)" class="flex-1 py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded">BUY</button>
                                 <button onclick="makeTrade(-1)" class="flex-1 py-3 bg-red-600 hover:bg-red-500 text-white font-bold rounded">SELL</button>
@@ -409,103 +388,46 @@
                     <div id="market-log" class="mt-4 text-sm text-gray-400 h-20 overflow-y-auto font-mono"></div>
                 </div>
             `;
-            setTimeout(initQuestChart, 100);
-            nextMarketTurn();
+            setTimeout(initQuestChart, 100); nextMarketTurn();
         }
-
-        const newsFeed = [
-            "Аналитики прогнозируют бурный рост. Толпа покупает.",
-            "Рынок падает 3 дня подряд. Страшно?",
-            "Ваш сосед заработал +50% на мем-коине. А вы?",
-            "Тишина. Волатильность на минимуме.",
-            "Резкий обвал! Все кричат 'Скам!'",
-            "Отскок? Или дохлая кошка?"
-        ];
-
+        const newsFeed = ["Аналитики прогнозируют бурный рост...", "Рынок падает 3 дня подряд...", "Ваш сосед заработал +50%...", "Тишина...", "Резкий обвал!...", "Отскок?..."];
         function nextMarketTurn() {
-            if(marketRound >= newsFeed.length) {
-                finishRound2();
-                return;
-            }
+            if(marketRound >= newsFeed.length) { finishRound2(); return; }
             document.getElementById('market-news').innerText = newsFeed[marketRound];
         }
-
         function makeTrade(direction) {
             const betPercent = parseInt(document.getElementById('qBet').value) / 100;
             const emotion = document.getElementById('qEmotion').value;
             const betAmount = questState.capital * betPercent;
-            
-            // Simulation logic: Random outcome but slightly rigged against emotional trades
-            let changePct = (Math.random() - 0.45) * 0.4; // Volatility -18% to +22%
-            
-            // If greedy/fearful, punish slightly more often (Naiman's logic)
-            if((emotion === 'greed' && direction === 1) || (emotion === 'fear' && direction === -1)) {
-                 if(Math.random() > 0.4) changePct = -Math.abs(changePct); // Turn against user
-            }
-
-            let profit = 0;
-            if (direction !== 0) {
-                profit = betAmount * changePct * direction;
-            }
-
+            let changePct = (Math.random() - 0.45) * 0.4; 
+            if((emotion === 'greed' && direction === 1) || (emotion === 'fear' && direction === -1)) { if(Math.random() > 0.4) changePct = -Math.abs(changePct); }
+            let profit = (direction !== 0) ? betAmount * changePct * direction : 0;
             questState.capital += profit;
             marketHistory.push(questState.capital);
-            
-            // Record distortion if emotional
-            if((emotion === 'greed' || emotion === 'hope') && betPercent > 0.2) {
-                if(!questState.distortions.includes("Жадность (Overtrading)")) questState.distortions.push("Жадность (Overtrading)");
-            }
-            if(emotion === 'fear' && direction === 0) {
-                 if(!questState.distortions.includes("Страх (Упущенная выгода)")) questState.distortions.push("Страх (Упущенная выгода)");
-            }
-
-            // Update UI
+            if((emotion === 'greed' || emotion === 'hope') && betPercent > 0.2) if(!questState.distortions.includes("Жадность (Overtrading)")) questState.distortions.push("Жадность (Overtrading)");
+            if(emotion === 'fear' && direction === 0) if(!questState.distortions.includes("Страх (Упущенная выгода)")) questState.distortions.push("Страх (Упущенная выгода)");
             document.getElementById('qCapital').innerText = "$" + questState.capital.toFixed(1);
             const log = document.getElementById('market-log');
-            const color = profit >= 0 ? 'text-green-400' : 'text-red-400';
-            log.innerHTML = `<div>Раунд ${marketRound+1}: <span class="${color}">${profit >= 0 ? '+' : ''}${profit.toFixed(1)}</span> (${emotion})</div>` + log.innerHTML;
-            
-            updateQuestChart();
-            
-            marketRound++;
-            nextMarketTurn();
+            log.innerHTML = `<div>Раунд ${marketRound+1}: <span class="${profit >= 0 ? 'text-green-400' : 'text-red-400'}">${profit >= 0 ? '+' : ''}${profit.toFixed(1)}</span> (${emotion})</div>` + log.innerHTML;
+            updateQuestChart(); marketRound++; nextMarketTurn();
         }
-
         let qChart;
         function initQuestChart() {
             const ctx = document.getElementById('questChart').getContext('2d');
-            qChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: [0],
-                    datasets: [{
-                        label: 'Капитал',
-                        data: [100],
-                        borderColor: '#22d3ee',
-                        tension: 0.1
-                    }]
-                },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false } } }
-            });
+            qChart = new Chart(ctx, { type: 'line', data: { labels: [0], datasets: [{ label: 'Капитал', data: [100], borderColor: '#22d3ee', tension: 0.1 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: false } } } });
         }
-        function updateQuestChart() {
-            qChart.data.labels = Array.from({length: marketHistory.length}, (_, i) => i);
-            qChart.data.datasets[0].data = marketHistory;
-            qChart.update();
-        }
-
+        function updateQuestChart() { qChart.data.labels = Array.from({length: marketHistory.length}, (_, i) => i); qChart.data.datasets[0].data = marketHistory; qChart.update(); }
         function finishRound2() {
             document.getElementById('game-content').innerHTML = `
                 <div class="text-center pt-10">
                     <h3 class="text-2xl font-bold text-white mb-4">Раунд 2 завершен</h3>
                     <p class="text-xl mb-6">Итоговый капитал: <strong class="${questState.capital >= 100 ? 'text-green-400' : 'text-red-400'}">$${questState.capital.toFixed(1)}</strong></p>
-                    <p class="text-gray-400 mb-8 max-w-lg mx-auto">Вы видели, как эмоции влияли на ваши ставки? Найману было бы о чем с вами поговорить.</p>
                     <button onclick="questRound3()" class="px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded shadow-lg">Перейти к Раунду 3</button>
                 </div>
             `;
         }
 
-        // --- ROUND 3: EKMAN (Lies & Self-Deception) ---
+        // --- ROUND 3: EKMAN ---
         function questRound3() {
             const content = document.getElementById('game-content');
             content.innerHTML = `
@@ -514,38 +436,28 @@
                         <h3 class="text-2xl font-bold text-blue-400">Раунд 3: Правда, ложь и самообман</h3>
                         <span class="text-sm text-gray-500">По Полу Экману</span>
                     </div>
-
                     <div class="bg-slate-800 p-8 rounded-xl text-center mb-8 relative">
                         <div class="text-6xl mb-4">🤥</div>
                         <h4 class="text-xl font-bold text-white mb-4">Заявление трейдера:</h4>
                         <p class="text-2xl italic text-gray-300 mb-8">"Я никогда не усредняю убыточную позицию, если этого нет в плане."</p>
-                        
                         <div class="flex justify-center gap-6">
                             <button onclick="checkLie(true)" class="px-8 py-3 bg-green-900/50 border border-green-500 hover:bg-green-900 rounded-lg text-green-400 font-bold">Верю</button>
                             <button onclick="checkLie(false)" class="px-8 py-3 bg-red-900/50 border border-red-500 hover:bg-red-900 rounded-lg text-red-400 font-bold">Не верю</button>
                         </div>
                     </div>
-                    
                     <div id="lieResult" class="hidden p-6 bg-slate-900 border-l-4 border-blue-500 rounded animate-fade-in">
                         <h4 class="font-bold text-white mb-2">Разбор:</h4>
-                        <p class="text-gray-300 mb-4">Это самая частая <strong>Ложь Самому Себе</strong>. Большинство трейдеров придумывают "рациональные" причины для усреднения (это инвестиция!), хотя на самом деле ими движет страх зафиксировать убыток.</p>
+                        <p class="text-gray-300 mb-4">Это самая частая <strong>Ложь Самому Себе</strong>. Большинство трейдеров придумывают "рациональные" причины для усреднения.</p>
                         <button onclick="showFinalPassport()" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded shadow-lg">Получить Паспорт Искажений</button>
                     </div>
                 </div>
             `;
         }
-
-        function checkLie(choice) {
-            document.getElementById('lieResult').classList.remove('hidden');
-            if(choice) questState.distortions.push("Наивный реализм (Слепота к лжи)");
-        }
+        function checkLie(choice) { document.getElementById('lieResult').classList.remove('hidden'); if(choice) questState.distortions.push("Наивный реализм (Слепота к лжи)"); }
 
         // --- FINAL: PASSPORT ---
         function showFinalPassport() {
-            const list = questState.distortions.length > 0 
-                ? questState.distortions.map(d => `<li class="mb-2 text-red-300">⚠️ ${d}</li>`).join('')
-                : `<li class="text-green-400">Вы действовали на удивление рационально! (Или хорошо обманывали себя)</li>`;
-
+            const list = questState.distortions.length > 0 ? questState.distortions.map(d => `<li class="mb-2 text-red-300">⚠️ ${d}</li>`).join('') : `<li class="text-green-400">Вы действовали на удивление рационально!</li>`;
             const content = document.getElementById('game-content');
             content.innerHTML = `
                 <div class="max-w-2xl mx-auto text-center pt-6">
@@ -553,105 +465,94 @@
                         <div class="absolute top-0 left-0 w-full h-4 bg-indigo-500"></div>
                         <h2 class="text-3xl font-bold text-slate-800 mb-2 mt-4 uppercase tracking-widest">Паспорт Искажений</h2>
                         <p class="text-slate-500 text-sm mb-6 border-b border-slate-300 pb-4">Личный профиль когнитивных ловушек</p>
-                        
-                        <div class="text-left mb-8">
-                            <h4 class="font-bold text-slate-700 mb-2">Обнаруженные уязвимости:</h4>
-                            <ul class="list-none">
-                                ${list}
-                            </ul>
-                        </div>
-
-                        <div class="text-left bg-slate-100 p-4 rounded text-sm text-slate-600">
-                            <strong>Рекомендация:</strong><br>
-                            Ваш "Быстрый мозг" (Система 1) пытается упростить реальность. Перед каждой сделкой берите паузу в 1 минуту ("правило медленного дыхания"), чтобы включить Систему 2.
-                        </div>
-
-                        <div class="mt-8 pt-4 border-t border-slate-200 flex justify-between items-center">
-                             <div class="text-xs text-slate-400">Лаборатория v4</div>
-                             <div class="font-mono font-bold text-indigo-600 text-xl">Kapital: $${questState.capital.toFixed(0)}</div>
-                        </div>
+                        <div class="text-left mb-8"><h4 class="font-bold text-slate-700 mb-2">Обнаруженные уязвимости:</h4><ul class="list-none">${list}</ul></div>
+                        <div class="text-left bg-slate-100 p-4 rounded text-sm text-slate-600"><strong>Рекомендация:</strong><br>Перед каждой сделкой берите паузу в 1 минуту, чтобы включить Систему 2.</div>
+                        <div class="mt-8 pt-4 border-t border-slate-200 flex justify-between items-center"><div class="text-xs text-slate-400">Лаборатория v5</div><div class="font-mono font-bold text-indigo-600 text-xl">Kapital: $${questState.capital.toFixed(0)}</div></div>
                     </div>
-                    
                     <button onclick="closeGame()" class="mt-8 text-gray-400 hover:text-white underline">Закрыть и вернуться в меню</button>
                 </div>
             `;
         }
 
-        // --- STANDARD GAME LOGIC (Keep existing for other cards) ---
+        // --- STANDARD GAME LOGIC (Individual Access) ---
         function renderAnchorGame(container) {
-             // (Code from v3 preserved but abbreviated here for brevity if same)
-             // Using simplified version for context, full logic in Quest above covers this theme
-             container.innerHTML = `<div class='text-center p-10'><h3 class='text-white text-xl'>Этот модуль теперь часть большого Квеста!</h3><button onclick="startQuest()" class='mt-4 px-4 py-2 bg-indigo-600 rounded text-white'>Начать Квест</button></div>`;
+            container.innerHTML = `
+                <h2 class="text-2xl font-bold text-yellow-400 mb-4">Эффект Якоря</h2>
+                <div id="anchor-demo" class="p-6 bg-slate-800 rounded-xl">
+                    <p class="text-lg text-white mb-4">Вращаем колесо... Выпало: <strong>12</strong></p>
+                    <p class="mb-4 text-gray-300">Процент стран Африки в ООН больше или меньше 12%?</p>
+                    <div class="flex gap-4"><button class="px-4 py-2 bg-gray-700 rounded" onclick="this.parentElement.nextElementSibling.classList.remove('hidden')">Больше</button><button class="px-4 py-2 bg-gray-700 rounded" onclick="this.parentElement.nextElementSibling.classList.remove('hidden')">Меньше</button></div>
+                    <div class="hidden mt-4 p-4 bg-slate-900 rounded border-l-4 border-yellow-500">
+                        <p class="text-sm">Если бы выпало 65, вы бы назвали число намного выше. Это "Якорь".</p>
+                    </div>
+                </div>
+            `;
         }
         function renderHerdGame(container) {
-             container.innerHTML = `<div class='text-center p-10'><h3 class='text-white text-xl'>Этот модуль теперь часть большого Квеста!</h3><button onclick="startQuest()" class='mt-4 px-4 py-2 bg-indigo-600 rounded text-white'>Начать Квест</button></div>`;
+            container.innerHTML = `
+                <h2 class="text-2xl font-bold text-purple-400 mb-4">Стадное Чувство</h2>
+                <div class="p-6 bg-slate-800 rounded-xl">
+                    <p class="mb-4 text-white">92% аналитиков советуют ПОКУПАТЬ. График смотрит вниз. Ваши действия?</p>
+                    <div class="flex gap-4">
+                        <button class="flex-1 py-3 bg-green-600 rounded font-bold" onclick="this.parentElement.nextElementSibling.innerHTML='<span class=text-red-400>Ловушка!</span> Вы пошли за толпой против фактов.'; this.parentElement.nextElementSibling.classList.remove('hidden')">BUY (Как все)</button>
+                        <button class="flex-1 py-3 bg-red-600 rounded font-bold" onclick="this.parentElement.nextElementSibling.innerHTML='<span class=text-green-400>Верно!</span> Вы доверились фактам, а не мнению.'; this.parentElement.nextElementSibling.classList.remove('hidden')">SELL (По графику)</button>
+                    </div>
+                    <div class="hidden mt-4 p-4 bg-slate-900 rounded border-l-4 border-purple-500 text-lg font-bold"></div>
+                </div>
+            `;
         }
         function renderEmotionGame(container) {
-             container.innerHTML = `<div class='text-center p-10'><h3 class='text-white text-xl'>Этот модуль теперь часть большого Квеста!</h3><button onclick="startQuest()" class='mt-4 px-4 py-2 bg-indigo-600 rounded text-white'>Начать Квест</button></div>`;
+            container.innerHTML = `
+                <h2 class="text-2xl font-bold text-red-400 mb-4">Детектор Тильта</h2>
+                <div class="space-y-4 max-w-md mx-auto">
+                    <div><label class="text-sm text-gray-400">Желание отыграться (0-10)</label><input type="range" id="tRevenge" max="10" class="w-full h-2 bg-gray-700 rounded-lg slider-thumb"></div>
+                    <div><label class="text-sm text-gray-400">Эйфория / Гнев (0-10)</label><input type="range" id="tEnergy" max="10" class="w-full h-2 bg-gray-700 rounded-lg slider-thumb"></div>
+                    <button onclick="let s=parseInt(document.getElementById('tRevenge').value)+parseInt(document.getElementById('tEnergy').value); document.getElementById('tRes').innerText = s>8 ? '🛑 СТОП! Торговля запрещена.' : '✅ Торговля разрешена.';" class="w-full py-2 bg-red-600 rounded font-bold">Проверить</button>
+                    <div id="tRes" class="text-center text-xl font-bold mt-4"></div>
+                </div>
+            `;
+        }
+        function renderProspectGame(container) {
+            container.innerHTML = `
+                <h2 class="text-2xl font-bold text-green-400 mb-4">Цена Страха</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="p-4 bg-slate-800 rounded-xl border-t-2 border-green-500">
+                        <h4 class="font-bold text-white mb-4">ПРИБЫЛЬ</h4>
+                        <button onclick="alert('Выбор большинства. Но математически вы теряете.')" class="w-full mb-2 p-3 bg-slate-700 hover:bg-slate-600 text-left rounded">🔒 Гарантированно: +$900</button>
+                        <button onclick="alert('Выбор профи. Риск ради матожидания.')" class="w-full p-3 bg-slate-700 hover:bg-slate-600 text-left rounded">🎲 90% шанс: +$1000</button>
+                    </div>
+                    <div class="p-4 bg-slate-800 rounded-xl border-t-2 border-red-500">
+                        <h4 class="font-bold text-white mb-4">УБЫТОК</h4>
+                        <button onclick="alert('Выбор профи. Принятие боли.')" class="w-full mb-2 p-3 bg-slate-700 hover:bg-slate-600 text-left rounded">✂️ Гарантированно: -$900</button>
+                        <button onclick="alert('Выбор лудомана. Надежда умирает последней.')" class="w-full p-3 bg-slate-700 hover:bg-slate-600 text-left rounded">🎰 90% шанс: -$1000</button>
+                    </div>
+                </div>
+            `;
         }
 
-        // --- MATH SIMULATOR LOGIC ---
+        // --- MATH SIMULATOR ---
         function runSimulation() {
             const winRate = parseInt(document.getElementById('winRate').value) / 100;
             const profit = parseInt(document.getElementById('profit').value) / 100;
             const loss = parseInt(document.getElementById('loss').value) / 100;
             const positions = parseInt(document.getElementById('positions').value);
-
             const ev = (winRate * profit) - ((1 - winRate) * loss);
             document.getElementById('mathExp').innerText = (ev * 100).toFixed(1) + "%";
             document.getElementById('mathExp').className = `text-xl font-bold ${ev > 0 ? 'text-green-400' : 'text-red-400'}`;
-
             const ctx = document.getElementById('simChart').getContext('2d');
-            const steps = 50;
-            let solo = 10000;
-            let port = 10000;
-            const soloData = [10000];
-            const portData = [10000];
+            const steps = 50; let solo = 10000; let port = 10000;
+            const soloData = [10000]; const portData = [10000];
             const labels = Array.from({length: steps+1}, (_, i) => i);
-
             for(let i=0; i<steps; i++) {
-                if (solo > 0) {
-                     if(Math.random() < winRate) solo *= (1+profit);
-                     else solo *= (1-loss);
-                }
-                soloData.push(solo);
-
-                if (port > 0) {
-                    let stepPL = 0;
-                    let betSize = port / positions;
-                    for(let j=0; j<positions; j++) {
-                        if(Math.random() < winRate) stepPL += betSize * profit;
-                        else stepPL -= betSize * loss;
-                    }
-                    port += stepPL;
-                }
-                portData.push(port);
+                if (solo > 0) { if(Math.random() < winRate) solo *= (1+profit); else solo *= (1-loss); } soloData.push(solo);
+                if (port > 0) { let stepPL = 0; let betSize = port / positions; for(let j=0; j<positions; j++) { if(Math.random() < winRate) stepPL += betSize * profit; else stepPL -= betSize * loss; } port += stepPL; } portData.push(port);
             }
-
             document.getElementById('resSolo').innerText = "$" + Math.round(soloData[steps]).toLocaleString();
             document.getElementById('resPort').innerText = "$" + Math.round(portData[steps]).toLocaleString();
-
             if(window.myChart) window.myChart.destroy();
-            window.myChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        { label: 'Портфель', data: portData, borderColor: '#22c55e', borderWidth: 2 },
-                        { label: 'Ва-банк', data: soloData, borderColor: '#ef4444', borderWidth: 1, borderDash: [5,5] }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: { y: { type: 'logarithmic', display: false }, x: { display: false } },
-                    plugins: { legend: { display: false } }
-                }
-            });
+            window.myChart = new Chart(ctx, { type: 'line', data: { labels: labels, datasets: [ { label: 'Портфель', data: portData, borderColor: '#22c55e', borderWidth: 2 }, { label: 'Ва-банк', data: soloData, borderColor: '#ef4444', borderWidth: 1, borderDash: [5,5] } ] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { type: 'logarithmic', display: false }, x: { display: false } }, plugins: { legend: { display: false } } } });
         }
-        
         runSimulation();
-
     </script>
 </body>
 </html>
