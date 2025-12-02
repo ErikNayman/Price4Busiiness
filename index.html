@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Трейдер vs Психология | Лаборатория v2</title>
+    <title>Трейдер: Игры Разума | Лаборатория v3</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -14,6 +14,7 @@
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: all 0.3s ease;
         }
         .slider-thumb::-webkit-slider-thumb {
             -webkit-appearance: none;
@@ -24,30 +25,34 @@
             cursor: pointer;
             border-radius: 50%;
         }
-        .slider-thumb:hover::-webkit-slider-thumb {
-            background: #0ea5e9;
-        }
-        .modal-overlay {
-            background-color: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(5px);
-        }
         .tab-btn.active {
             background-color: #0ea5e9;
             color: white;
             border-color: #0ea5e9;
+            box-shadow: 0 0 10px rgba(14, 165, 233, 0.3);
         }
-        .scenario-card {
-            transition: all 0.2s ease;
+        .game-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
         }
-        .scenario-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
-            border-color: #94a3b8;
+        .game-card:hover {
+            transform: translateY(-5px);
+            border-color: #38bdf8;
+            box-shadow: 0 10px 20px -5px rgba(56, 189, 248, 0.2);
         }
-        .chart-mini-container {
-            position: relative;
-            height: 200px;
-            width: 100%;
+        .hidden-answer {
+            filter: blur(5px);
+            transition: filter 0.5s ease;
+        }
+        .revealed {
+            filter: blur(0);
+        }
+        @keyframes pulse-red {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+            50% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+        }
+        .animate-pulse-red {
+            animation: pulse-red 2s infinite;
         }
     </style>
 </head>
@@ -56,548 +61,439 @@
     <!-- Header -->
     <header class="h-16 border-b border-gray-700 flex items-center justify-between px-6 bg-slate-900 z-10 shrink-0">
         <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded bg-gradient-to-br from-blue-500 to-cyan-400 flex items-center justify-center text-white font-bold text-lg">T</div>
-            <h1 class="text-xl font-bold tracking-tight text-white">Лаборатория <span class="text-cyan-400">Вероятностей</span></h1>
+            <div class="w-8 h-8 rounded bg-gradient-to-br from-purple-500 to-cyan-400 flex items-center justify-center text-white font-bold text-lg">Ψ</div>
+            <h1 class="text-xl font-bold tracking-tight text-white">Трейдер: <span class="text-cyan-400">Игры Разума</span></h1>
         </div>
         <div class="flex items-center gap-4">
             <div class="bg-gray-800 p-1 rounded-lg flex text-sm font-medium">
-                <button onclick="switchTab('simulation')" id="tab-simulation" class="tab-btn active px-4 py-1.5 rounded-md transition-all text-gray-400">Симулятор</button>
-                <button onclick="switchTab('psychology')" id="tab-psychology" class="tab-btn px-4 py-1.5 rounded-md transition-all text-gray-400">Психология (Канеман)</button>
+                <button onclick="switchTab('simulation')" id="tab-simulation" class="tab-btn active px-4 py-1.5 rounded-md transition-all text-gray-400">Математика (Риск)</button>
+                <button onclick="switchTab('games')" id="tab-games" class="tab-btn px-4 py-1.5 rounded-md transition-all text-gray-400">Психология (Игры)</button>
             </div>
         </div>
     </header>
 
-    <!-- VIEW 1: SIMULATION (Risk Management) -->
-    <div id="view-simulation" class="flex flex-1 overflow-hidden">
+    <!-- TAB 1: MATH SIMULATOR (Risk Management) - Simplified for context -->
+    <div id="view-simulation" class="flex flex-1 overflow-hidden relative">
         <aside class="w-full md:w-80 bg-slate-900 border-r border-gray-700 overflow-y-auto p-6 flex flex-col gap-6 z-10 shadow-2xl">
+            <div class="p-4 bg-blue-900/20 border border-blue-500/30 rounded-lg">
+                <h3 class="text-blue-400 font-bold mb-1 text-sm">База из PDF:</h3>
+                <p class="text-xs text-gray-400">Здесь мы моделируем "Матожидание" и "Диверсификацию". Если психология подведет, вернись сюда за отрезвляющими цифрами.</p>
+            </div>
+            
             <div class="space-y-4">
-                <h2 class="text-xs uppercase tracking-wider text-gray-500 font-semibold">Параметры Сделки</h2>
+                <h2 class="text-xs uppercase tracking-wider text-gray-500 font-semibold">Настройки</h2>
                 <div>
-                    <div class="flex justify-between mb-1">
-                        <label class="text-sm font-medium text-gray-300">Вероятность успеха</label>
-                        <span id="winRateVal" class="text-sm font-bold text-cyan-400">50%</span>
-                    </div>
-                    <input type="range" id="winRate" min="1" max="99" value="50" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider-thumb">
+                    <label class="text-sm text-gray-300 flex justify-between"><span>Win Rate</span> <span id="winRateVal" class="text-cyan-400">50%</span></label>
+                    <input type="range" id="winRate" min="10" max="90" value="50" class="w-full h-2 bg-gray-700 rounded-lg slider-thumb">
                 </div>
                 <div>
-                    <div class="flex justify-between mb-1">
-                        <label class="text-sm font-medium text-gray-300">Прибыль (Take Profit)</label>
-                        <span id="profitVal" class="text-sm font-bold text-green-400">+100%</span>
-                    </div>
-                    <input type="range" id="profit" min="10" max="500" value="100" step="10" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider-thumb">
+                    <label class="text-sm text-gray-300 flex justify-between"><span>Take Profit</span> <span id="profitVal" class="text-green-400">+100%</span></label>
+                    <input type="range" id="profit" min="10" max="300" value="100" class="w-full h-2 bg-gray-700 rounded-lg slider-thumb">
                 </div>
                 <div>
-                    <div class="flex justify-between mb-1">
-                        <label class="text-sm font-medium text-gray-300">Убыток (Stop Loss)</label>
-                        <span id="lossVal" class="text-sm font-bold text-red-400">-50%</span>
-                    </div>
-                    <input type="range" id="loss" min="1" max="99" value="50" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider-thumb">
-                    <p class="text-xs text-red-500 mt-1" id="lossWarning">Осторожно! Высокий риск разорения.</p>
+                    <label class="text-sm text-gray-300 flex justify-between"><span>Stop Loss</span> <span id="lossVal" class="text-red-400">-50%</span></label>
+                    <input type="range" id="loss" min="10" max="90" value="50" class="w-full h-2 bg-gray-700 rounded-lg slider-thumb">
+                </div>
+                <div>
+                    <label class="text-sm text-gray-300 flex justify-between"><span>Позиций</span> <span id="positionsVal" class="text-purple-400">10</span></label>
+                    <input type="range" id="positions" min="1" max="50" value="10" class="w-full h-2 bg-gray-700 rounded-lg slider-thumb">
                 </div>
             </div>
-            <div class="h-px bg-gray-700"></div>
-            <div class="space-y-4">
-                <h2 class="text-xs uppercase tracking-wider text-gray-500 font-semibold">Структура Портфеля</h2>
-                <div>
-                    <div class="flex justify-between mb-1">
-                        <label class="text-sm font-medium text-gray-300">Диверсификация</label>
-                        <span id="positionsVal" class="text-sm font-bold text-purple-400">10</span>
-                    </div>
-                    <input type="range" id="positions" min="1" max="100" value="10" class="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider-thumb">
-                </div>
-            </div>
-            <button onclick="runSimulation()" class="mt-4 w-full py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold rounded shadow-lg transform transition active:scale-95 flex items-center justify-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                Запустить
-            </button>
+            <button onclick="runSimulation()" class="w-full py-3 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded shadow-lg transition transform active:scale-95">Рассчитать</button>
         </aside>
 
-        <main class="flex-1 relative flex flex-col">
-            <div class="h-16 bg-slate-800/50 border-b border-gray-700 flex items-center justify-around px-4 backdrop-blur-sm z-10 shrink-0">
-                <div class="text-center">
+        <main class="flex-1 p-4 md:p-8 flex flex-col">
+            <div class="flex justify-between mb-4 px-4">
+                 <div class="text-center">
                     <div class="text-xs text-gray-500">Мат. ожидание</div>
-                    <div id="mathExpectation" class="text-lg font-mono font-bold text-gray-300">0.00%</div>
+                    <div id="mathExp" class="text-xl font-bold text-gray-200">0%</div>
                 </div>
-                <div class="text-center border-l border-gray-700 pl-6">
-                    <div class="text-xs text-gray-500">Ва-банк</div>
-                    <div id="resultSolo" class="text-lg font-mono font-bold text-red-500">$0</div>
+                <div class="text-center">
+                    <div class="text-xs text-gray-500">Результат "Ва-банк"</div>
+                    <div id="resSolo" class="text-xl font-bold text-red-500">$0</div>
                 </div>
-                <div class="text-center border-l border-gray-700 pl-6">
-                    <div class="text-xs text-gray-500">Портфель</div>
-                    <div id="resultPortfolio" class="text-lg font-mono font-bold text-green-500">$0</div>
-                </div>
-            </div>
-            <div class="flex-1 p-4 md:p-8 relative min-h-0">
-                <div class="w-full h-full glass-panel rounded-2xl p-4">
-                    <canvas id="simulationChart"></canvas>
+                <div class="text-center">
+                    <div class="text-xs text-gray-500">Результат "Портфеля"</div>
+                    <div id="resPort" class="text-xl font-bold text-green-500">$0</div>
                 </div>
             </div>
-            <div id="insightBox" class="absolute bottom-8 right-8 max-w-md bg-slate-800 border-l-4 border-cyan-500 text-white p-4 shadow-2xl rounded-r hidden animate-fade-in-up z-20">
-                <h3 class="font-bold mb-1 text-cyan-400">Анализ результата:</h3>
-                <p id="insightText" class="text-sm text-gray-300">...</p>
+            <div class="flex-1 glass-panel rounded-2xl p-4">
+                <canvas id="simChart"></canvas>
             </div>
         </main>
     </div>
 
-    <!-- VIEW 2: PSYCHOLOGY (Prospect Theory) -->
-    <div id="view-psychology" class="hidden flex-1 overflow-auto bg-slate-900 p-4 md:p-8">
-        <div class="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <!-- TAB 2: PSYCHOLOGY GAMES (New Features) -->
+    <div id="view-games" class="hidden flex-1 overflow-auto bg-slate-900 p-4 md:p-8">
+        <div class="max-w-5xl mx-auto">
             
-            <!-- Experiment Column -->
-            <div class="space-y-6 order-2 lg:order-1">
-                <h2 class="text-2xl font-bold text-white mb-2">Проверь себя: Тест Канемана</h2>
-                <p class="text-gray-400 mb-6">Принимайте решения интуитивно, как в жизни.</p>
-
-                <!-- SCENARIO 1: GAIN -->
-                <div class="glass-panel p-6 rounded-2xl border-t-4 border-green-500 relative overflow-hidden">
-                    <h3 class="text-sm uppercase tracking-wide text-green-400 font-bold mb-3">Сценарий 1: Прибыль</h3>
-                    <p class="text-gray-300 mb-4">Вам дают выбор. Что вы возьмете?</p>
-                    
-                    <div class="grid grid-cols-1 gap-3">
-                        <!-- Option A: Guaranteed (Standard) -->
-                        <button onclick="checkScenario('gain', 'safe')" class="scenario-card p-4 bg-slate-800 hover:bg-slate-700 border border-gray-600 rounded-lg text-left group">
-                            <div class="flex justify-between items-center">
-                                <div>
-                                    <div class="text-lg font-bold text-white mb-1 group-hover:text-green-400">Гарантированно получить $900</div>
-                                    <div class="text-xs text-gray-500">Риск: 0%</div>
-                                </div>
-                                <div class="text-2xl opacity-50">🔒</div>
-                            </div>
-                        </button>
-                        
-                        <!-- Option B: Risky -->
-                        <button onclick="checkScenario('gain', 'risky')" class="scenario-card p-4 bg-slate-800 hover:bg-slate-700 border border-gray-600 rounded-lg text-left group">
-                            <div class="flex justify-between items-center">
-                                <div>
-                                    <div class="text-lg font-bold text-white mb-1 group-hover:text-green-400">90% шанс получить $1000</div>
-                                    <div class="text-xs text-gray-500 text-yellow-500">10% шанс ничего не получить (и не потерять)</div>
-                                </div>
-                                <div class="text-2xl opacity-50">🎲</div>
-                            </div>
-                        </button>
-
-                        <!-- Option C: Third Way (Let Profits Run) -->
-                        <button onclick="checkScenario('gain', 'custom')" class="scenario-card p-4 bg-slate-900/50 hover:bg-slate-800 border border-dashed border-gray-600 rounded-lg text-left group">
-                            <div class="flex justify-between items-center">
-                                <div>
-                                    <div class="text-lg font-bold text-gray-300 mb-1 group-hover:text-green-400">"Пересидеть" (Дать прибыли течь)</div>
-                                    <div class="text-xs text-gray-500">Самое сложное — ничего не делать, когда видишь прибыль</div>
-                                </div>
-                                <div class="text-2xl opacity-50">🧘</div>
-                            </div>
-                        </button>
-                    </div>
-
-                    <!-- Feedback Area Gain -->
-                    <div id="feedback-gain" class="hidden mt-4 p-4 rounded-xl bg-slate-950 border border-gray-800 animate-fade-in">
-                        <div id="feedback-gain-text" class="text-sm mb-4"></div>
-                        <div class="text-xs uppercase tracking-widest text-gray-500 font-bold mb-2 text-center">Ваш капитал через 10 лет такой стратегии</div>
-                        <div class="chart-mini-container">
-                            <canvas id="chartGainLongTerm"></canvas>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- SCENARIO 2: LOSS -->
-                <div class="glass-panel p-6 rounded-2xl border-t-4 border-red-500 relative overflow-hidden">
-                    <h3 class="text-sm uppercase tracking-wide text-red-400 font-bold mb-3">Сценарий 2: Убыток</h3>
-                    <p class="text-gray-300 mb-4">Позиция в минусе. Вам грозит штраф. Что вы выберете?</p>
-                    
-                    <div class="grid grid-cols-1 gap-3">
-                        <!-- Option A: Guaranteed Pain -->
-                        <button onclick="checkScenario('loss', 'safe')" class="scenario-card p-4 bg-slate-800 hover:bg-slate-700 border border-gray-600 rounded-lg text-left group">
-                            <div class="flex justify-between items-center">
-                                <div>
-                                    <div class="text-lg font-bold text-white mb-1 group-hover:text-green-400">Зафиксировать убыток $900</div>
-                                    <div class="text-xs text-gray-500">Боль: Гарантированная, но конечная</div>
-                                </div>
-                                <div class="text-2xl opacity-50">✂️</div>
-                            </div>
-                        </button>
-                        
-                        <!-- Option B: Risky Hope -->
-                        <button onclick="checkScenario('loss', 'risky')" class="scenario-card p-4 bg-slate-800 hover:bg-slate-700 border border-gray-600 rounded-lg text-left group">
-                            <div class="flex justify-between items-center">
-                                <div>
-                                    <div class="text-lg font-bold text-white mb-1 group-hover:text-red-400">90% шанс потерять $1000</div>
-                                    <div class="text-xs text-gray-500 text-green-400">10% шанс выйти в ноль (Надежда)</div>
-                                </div>
-                                <div class="text-2xl opacity-50">🎰</div>
-                            </div>
-                        </button>
-
-                        <!-- Option C: Third Way (Averaging/Delay) -->
-                        <button onclick="checkScenario('loss', 'custom')" class="scenario-card p-4 bg-slate-900/50 hover:bg-slate-800 border border-dashed border-gray-600 rounded-lg text-left group">
-                            <div class="flex justify-between items-center">
-                                <div>
-                                    <div class="text-lg font-bold text-gray-300 mb-1 group-hover:text-red-500">"Пересидеть" (Усредниться)</div>
-                                    <div class="text-xs text-gray-500">Вы платите комиссию и время за надежду отыграться</div>
-                                </div>
-                                <div class="text-2xl opacity-50">📉</div>
-                            </div>
-                        </button>
-                    </div>
-
-                    <!-- Feedback Area Loss -->
-                    <div id="feedback-loss" class="hidden mt-4 p-4 rounded-xl bg-slate-950 border border-gray-800 animate-fade-in">
-                        <div id="feedback-loss-text" class="text-sm mb-4"></div>
-                        <div class="text-xs uppercase tracking-widest text-gray-500 font-bold mb-2 text-center">Ваш капитал через 10 лет такой стратегии</div>
-                        <div class="chart-mini-container">
-                            <canvas id="chartLossLongTerm"></canvas>
-                        </div>
-                    </div>
-                </div>
+            <div class="mb-8 text-center">
+                <h2 class="text-3xl font-bold text-white mb-2">Лаборатория Иллюзий</h2>
+                <p class="text-gray-400">Эксперименты над собой на основе Канемана, Чалдини и Экмана.</p>
             </div>
 
-            <!-- Theory Column -->
-            <div class="space-y-6 order-1 lg:order-2">
-                 <div class="bg-blue-900/20 border border-blue-500/30 p-6 rounded-2xl sticky top-6">
-                    <h2 class="text-2xl font-bold text-white mb-4">Почему это важно?</h2>
-                    
-                    <div class="space-y-4">
-                        <div class="flex gap-4">
-                            <div class="w-10 h-10 rounded bg-green-500/20 flex items-center justify-center text-green-400 text-xl font-bold">1</div>
-                            <div>
-                                <h4 class="font-bold text-white">Ловушка Прибыли</h4>
-                                <p class="text-sm text-gray-400">Выбирая "Синицу в руках" (гарантированные $850-900), вы систематически недополучаете прибыль. В долгосроке вы <strong class="text-red-400">проигрываете индексу S&P 500</strong>, потому что режете победителей.</p>
-                            </div>
-                        </div>
-
-                        <div class="flex gap-4">
-                            <div class="w-10 h-10 rounded bg-red-500/20 flex items-center justify-center text-red-400 text-xl font-bold">2</div>
-                            <div>
-                                <h4 class="font-bold text-white">Ловушка Убытка</h4>
-                                <p class="text-sm text-gray-400">Выбирая риск (надежду отыграться), вы иногда спасаетесь. Но математика неумолима: <strong class="text-red-400">одна катастрофа обнулит 10 лет успеха</strong>. Это путь к накоплению "токсичного портфеля".</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="mt-8 pt-6 border-t border-gray-700">
-                        <p class="text-xs text-gray-500 text-center uppercase tracking-widest mb-2">Кривая ценности (Theory of Prospect)</p>
-                        <div class="h-48 w-full">
-                            <canvas id="prospectTheoryChart"></canvas>
-                        </div>
-                        <p class="text-center text-xs text-gray-400 mt-2">
-                            Обратите внимание: <span class="text-red-400">Боль</span> от потери падает круче, чем растет <span class="text-green-400">Радость</span> от прибыли.
-                        </p>
-                    </div>
+            <!-- Game Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="game-grid">
+                
+                <!-- GAME 1: ANCHORING (Kahneman) -->
+                <div onclick="openGame('anchor')" class="game-card glass-panel p-6 rounded-2xl border-t-4 border-yellow-500 relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 text-6xl">⚓</div>
+                    <h3 class="text-xl font-bold text-white mb-2">Эффект Якоря</h3>
+                    <p class="text-sm text-gray-400 mb-4">Насколько легко "случайные" цифры влияют на ваши прогнозы цены?</p>
+                    <div class="text-xs font-mono text-yellow-500 uppercase tracking-widest">Д. Канеман "Думай медленно..."</div>
                 </div>
+
+                <!-- GAME 2: SOCIAL PROOF (Cialdini) -->
+                <div onclick="openGame('herd')" class="game-card glass-panel p-6 rounded-2xl border-t-4 border-purple-500 relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 text-6xl">🐑</div>
+                    <h3 class="text-xl font-bold text-white mb-2">Стадное Чувство</h3>
+                    <p class="text-sm text-gray-400 mb-4">Сможете ли вы противостоять "мнению большинства", когда рынок идет против вас?</p>
+                    <div class="text-xs font-mono text-purple-500 uppercase tracking-widest">Р. Чалдини "Психология влияния"</div>
+                </div>
+
+                <!-- GAME 3: EMOTIONAL TILT (Ekman) -->
+                <div onclick="openGame('emotion')" class="game-card glass-panel p-6 rounded-2xl border-t-4 border-red-500 relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 text-6xl">😡</div>
+                    <h3 class="text-xl font-bold text-white mb-2">Детектор Тильта</h3>
+                    <p class="text-sm text-gray-400 mb-4">Чекап перед торгами. Распознайте эмоции, которые крадут ваш депозит.</p>
+                    <div class="text-xs font-mono text-red-500 uppercase tracking-widest">П. Экман "Психология эмоций"</div>
+                </div>
+
+                <!-- GAME 4: LOSS AVERSION (Theory) -->
+                <div onclick="openGame('prospect')" class="game-card glass-panel p-6 rounded-2xl border-t-4 border-green-500 relative overflow-hidden group">
+                    <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 text-6xl">⚖️</div>
+                    <h3 class="text-xl font-bold text-white mb-2">Цена Страха</h3>
+                    <p class="text-sm text-gray-400 mb-4">Классический эксперимент: Синица в руках или Журавль в небе?</p>
+                    <div class="text-xs font-mono text-green-500 uppercase tracking-widest">Канеман и Тверски</div>
+                </div>
+
             </div>
+
+            <!-- ACTIVE GAME AREA (Dynamically populated) -->
+            <div id="active-game-container" class="hidden mt-6 glass-panel p-8 rounded-2xl border border-gray-700 animate-fade-in">
+                <button onclick="closeGame()" class="mb-4 text-sm text-gray-400 hover:text-white flex items-center gap-2">
+                    ← Вернуться к списку экспериментов
+                </button>
+                <div id="game-content"></div>
+            </div>
+
         </div>
     </div>
 
     <script>
-        // --- Navigation ---
-        let prospectChartInstance = null;
-        let gainChartInstance = null;
-        let lossChartInstance = null;
-
-        function switchTab(tabName) {
+        // --- CORE NAVIGATION ---
+        function switchTab(tab) {
             document.getElementById('view-simulation').classList.add('hidden');
-            document.getElementById('view-psychology').classList.add('hidden');
+            document.getElementById('view-games').classList.add('hidden');
             document.getElementById('tab-simulation').classList.remove('active');
-            document.getElementById('tab-psychology').classList.remove('active');
+            document.getElementById('tab-games').classList.remove('active');
 
-            document.getElementById('view-' + tabName).classList.remove('hidden');
-            document.getElementById('tab-' + tabName).classList.add('active');
-
-            if (tabName === 'psychology') {
-                if (!prospectChartInstance) renderProspectChart();
-            }
+            document.getElementById('view-' + tab).classList.remove('hidden');
+            document.getElementById('tab-' + tab).classList.add('active');
         }
 
-        // --- Psychology: Long Term Charts Generators ---
-        function renderGainLongTerm(scenario) {
-            const ctx = document.getElementById('chartGainLongTerm').getContext('2d');
-            if (gainChartInstance) gainChartInstance.destroy();
-
-            const labels = ['Год 1', 'Год 3', 'Год 5', 'Год 7', 'Год 10'];
-            let userData, benchmarkData, color, label;
-
-            if (scenario === 'safe') {
-                // Safe choice: Slow linear growth
-                userData = [100, 110, 120, 130, 140];
-                benchmarkData = [100, 130, 170, 210, 280]; 
-                color = '#facc15'; // Yellow
-                label = 'Безопасный путь (Режем прибыль)';
-            } else {
-                // "Risky" or "Wait": High growth (Let profits run)
-                userData = [100, 135, 180, 230, 310]; // Outperforms safe
-                benchmarkData = [100, 130, 170, 210, 280];
-                color = '#4ade80'; // Green
-                label = 'Путь профессионала (Даем прибыли течь)';
-            }
-
-            gainChartInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: label,
-                            data: userData,
-                            borderColor: color,
-                            borderWidth: 3,
-                            tension: 0.3
-                        },
-                        {
-                            label: 'Рынок (S&P 500)',
-                            data: benchmarkData,
-                            borderColor: '#64748b',
-                            borderWidth: 2,
-                            borderDash: [5, 5],
-                            tension: 0.3
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: true, labels: { color: '#cbd5e1' } } },
-                    scales: {
-                        y: { display: false },
-                        x: { grid: { display: false }, ticks: { color: '#64748b' } }
-                    }
-                }
-            });
-        }
-
-        function renderLossLongTerm(scenario) {
-            const ctx = document.getElementById('chartLossLongTerm').getContext('2d');
-            if (lossChartInstance) lossChartInstance.destroy();
-
-            const labels = ['Год 1', 'Год 3', 'Год 5', 'Год 7', 'Год 10'];
-            let userData, label, color;
-
-            if (scenario === 'safe') {
-                // Cutting losses: Equity stays healthy
-                userData = [100, 95, 120, 115, 150]; 
-                label = 'Дисциплинированный трейдер';
-                color = '#4ade80';
-            } else {
-                // Holding losses: Catastrophe
-                userData = [100, 90, 80, 110, 0]; 
-                label = 'Любитель "Пересидеть"';
-                color = '#ef4444';
-            }
-
-            lossChartInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: label,
-                        data: userData,
-                        borderColor: color,
-                        backgroundColor: color + '20', 
-                        borderWidth: 3,
-                        fill: true,
-                        tension: 0.3
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: true, labels: { color: '#cbd5e1' } } },
-                    scales: {
-                        y: { min: 0, grid: { color: '#334155' }, ticks: { color: '#64748b' } },
-                        x: { grid: { display: false }, ticks: { color: '#64748b' } }
-                    }
-                }
-            });
-        }
-
-        // --- Psychology Logic ---
-        function checkScenario(type, choice) {
-            const feedbackEl = document.getElementById(`feedback-${type}`);
-            const textEl = document.getElementById(`feedback-${type}-text`);
-            feedbackEl.classList.remove('hidden');
+        function openGame(gameId) {
+            document.getElementById('game-grid').classList.add('hidden');
+            const container = document.getElementById('active-game-container');
+            container.classList.remove('hidden');
             
-            if (type === 'gain') {
-                if (choice === 'safe') {
-                    textEl.innerHTML = "<strong class='text-yellow-400'>Выбор большинства.</strong> Вы взяли $900. <br>Это приятно сейчас, но вы добровольно отказались от потенциала тренда. Вы «режете прибыль», что на дистанции ведет к отставанию от рынка.";
-                    renderGainLongTerm('safe');
-                } else if (choice === 'custom') {
-                    // Пересидеть (Profit) - This is GOOD
-                    textEl.innerHTML = "<strong class='text-green-400'>Выбор Элиты.</strong><br>«Пересидеть» в прибыли — это искусство. Вы побороли желание схватить синицу в руках и позволили депозиту расти. Именно так делаются состояния на трендах.";
-                    renderGainLongTerm('custom');
-                } else {
-                    textEl.innerHTML = "<strong class='text-green-400'>Рациональный выбор!</strong><br>Вы выбрали риск ради максимизации матожидания. Хотя 10% шанс неудачи пугает, именно так ведут себя фонды и казино.";
-                    renderGainLongTerm('risky');
-                }
-            } else if (type === 'loss') {
-                if (choice === 'risky') {
-                    textEl.innerHTML = "<strong class='text-red-400'>Ловушка захлопнулась.</strong><br>Мат. ожидание убытка -$900, но вы выбрали риск потерять $1000 ради призрачной надежды. На графике видно итог: однажды удача отвернется, и убыток уничтожит депозит.";
-                    renderLossLongTerm('risky');
-                } else if (choice === 'custom') {
-                    textEl.innerHTML = "<strong class='text-red-500'>Самый опасный путь.</strong><br>«Пересиживание» убытков — главная причина слива депозитов. Вы замораживаете капитал в «токсичном» активе вместо того, чтобы искать новые возможности.";
-                    renderLossLongTerm('risky'); 
-                } else {
-                    textEl.innerHTML = "<strong class='text-green-400'>Профессионально!</strong><br>Зафиксировать убыток больно (-$900), но это спасает от катастрофы. Вы сохранили капитал для следующей сделки.";
-                    renderLossLongTerm('safe');
-                }
-            }
+            const content = document.getElementById('game-content');
+            content.innerHTML = ''; // Clear previous
+
+            if(gameId === 'anchor') renderAnchorGame(content);
+            if(gameId === 'herd') renderHerdGame(content);
+            if(gameId === 'emotion') renderEmotionGame(content);
+            if(gameId === 'prospect') renderProspectGame(content);
         }
 
-        function renderProspectChart() {
-            const ctx = document.getElementById('prospectTheoryChart').getContext('2d');
-            const dataGain = [];
-            const dataLoss = [];
-            for (let i = 0; i <= 100; i+=5) dataGain.push({x: i, y: Math.pow(i, 0.6)});
-            for (let i = 0; i >= -100; i-=5) dataLoss.push({x: i, y: -2.5 * Math.pow(-i, 0.6)});
-
-            prospectChartInstance = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    datasets: [
-                        { label: 'Радость', data: dataGain, borderColor: '#4ade80', borderWidth: 3 },
-                        { label: 'Боль', data: dataLoss, borderColor: '#f87171', borderWidth: 3 }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { display: false } },
-                    scales: {
-                        x: { type: 'linear', position: 'center', grid: { color: '#334155' }, ticks: { display: false } },
-                        y: { type: 'linear', position: 'center', grid: { color: '#334155' }, ticks: { display: false } }
-                    }
-                }
-            });
+        function closeGame() {
+            document.getElementById('active-game-container').classList.add('hidden');
+            document.getElementById('game-grid').classList.remove('hidden');
         }
 
-        // --- Simulator Logic ---
-        const startCapital = 10000;
-        const steps = 200; 
-        const inputs = {
-            winRate: document.getElementById('winRate'),
-            profit: document.getElementById('profit'),
-            loss: document.getElementById('loss'),
-            positions: document.getElementById('positions')
-        };
-        const displays = {
-            winRate: document.getElementById('winRateVal'),
-            profit: document.getElementById('profitVal'),
-            loss: document.getElementById('lossVal'),
-            positions: document.getElementById('positionsVal'),
-            lossWarning: document.getElementById('lossWarning'),
-            mathExp: document.getElementById('mathExpectation'),
-            resSolo: document.getElementById('resultSolo'),
-            resPort: document.getElementById('resultPortfolio'),
-            insightBox: document.getElementById('insightBox'),
-            insightText: document.getElementById('insightText')
-        };
+        // --- GAME 1: ANCHOR EFFECT (Kahneman) ---
+        function renderAnchorGame(container) {
+            // Randomly pick High or Low anchor
+            const isHighAnchor = Math.random() > 0.5;
+            const anchorVal = isHighAnchor ? 65000 : 12000;
+            
+            container.innerHTML = `
+                <h2 class="text-2xl font-bold text-yellow-400 mb-4">Эксперимент: Эффект Якоря</h2>
+                <p class="text-gray-300 mb-6">Ответьте на два вопроса честно и быстро.</p>
+                
+                <div id="q1" class="mb-8 p-4 bg-slate-800 rounded-lg">
+                    <p class="text-lg mb-4 text-white">Вопрос 1: Цена Биткоина в следующем месяце будет выше или ниже <span class="font-bold text-yellow-400">$${anchorVal}</span>?</p>
+                    <div class="flex gap-4">
+                        <button onclick="document.getElementById('q1').classList.add('opacity-50'); document.getElementById('q2').classList.remove('hidden');" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded text-white">Выше</button>
+                        <button onclick="document.getElementById('q1').classList.add('opacity-50'); document.getElementById('q2').classList.remove('hidden');" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded text-white">Ниже</button>
+                    </div>
+                </div>
 
-        let chartInstance = null;
+                <div id="q2" class="hidden mb-8 p-4 bg-slate-800 rounded-lg animate-fade-in">
+                    <p class="text-lg mb-4 text-white">Вопрос 2: Напишите ваш реальный прогноз цены Биткоина (в $):</p>
+                    <input type="number" id="userPrice" class="w-full p-2 bg-slate-900 border border-gray-600 rounded text-white mb-4" placeholder="Например: 35000">
+                    <button onclick="revealAnchorResult(${isHighAnchor})" class="px-6 py-2 bg-yellow-600 hover:bg-yellow-500 text-white font-bold rounded">Узнать правду</button>
+                </div>
 
-        Object.values(inputs).forEach(input => {
-            input.addEventListener('input', updateDisplays);
-        });
+                <div id="anchor-result" class="hidden p-6 bg-slate-900/80 border border-yellow-500/30 rounded-xl"></div>
+            `;
+        }
 
-        function updateDisplays() {
-            displays.winRate.textContent = inputs.winRate.value + '%';
-            displays.profit.textContent = '+' + inputs.profit.value + '%';
-            displays.loss.textContent = '-' + inputs.loss.value + '%';
-            displays.positions.textContent = inputs.positions.value;
-            const Pw = inputs.winRate.value / 100;
-            const Pl = 1 - Pw;
-            const Sw = inputs.profit.value / 100;
-            const Sl = inputs.loss.value / 100;
-            const ev = (Pw * Sw) - (Pl * Sl);
-            displays.mathExp.textContent = (ev * 100).toFixed(2) + '%';
-            displays.mathExp.className = `text-lg font-mono font-bold ${ev > 0 ? 'text-green-400' : 'text-red-400'}`;
-            if (ev < -0.1) {
-                 displays.lossWarning.style.opacity = 1;
-                 displays.lossWarning.textContent = "Отрицательное мат. ожидание!";
+        function revealAnchorResult(isHigh) {
+            const userVal = document.getElementById('userPrice').value;
+            const res = document.getElementById('anchor-result');
+            res.classList.remove('hidden');
+            
+            const theoryHigh = "Люди, увидевшие цифру $65,000, в среднем называют цену на $10-15k выше, чем те, кто видел $12,000.";
+            const theoryLow = "Люди, увидевшие цифру $12,000, в среднем называют цену значительно ниже, чем те, кто видел $65,000.";
+
+            res.innerHTML = `
+                <h3 class="text-xl font-bold text-white mb-2">Что произошло?</h3>
+                <p class="text-gray-300 mb-4">
+                    Мы показали вам случайное число <strong>${isHigh ? '$65,000' : '$12,000'}</strong>. 
+                    Согласно Канеману ("Система 1"), ваш мозг использовал это число как "Якорь", от которого отталкивался при прогнозе.
+                    <br><br>
+                    ${isHigh ? theoryHigh : theoryLow}
+                </p>
+                <div class="p-4 bg-yellow-900/20 border-l-4 border-yellow-500 text-sm text-yellow-200">
+                    <strong>Урок для трейдера:</strong> Не позволяйте цене входа или новостным заголовкам становиться "Якорем". Оценивайте актив с нуля каждый день, как будто у вас нет позиции.
+                </div>
+            `;
+        }
+
+        // --- GAME 2: SOCIAL PROOF (Cialdini) ---
+        function renderHerdGame(container) {
+            container.innerHTML = `
+                <h2 class="text-2xl font-bold text-purple-400 mb-4">Эксперимент: Социальное Доказательство</h2>
+                <p class="text-gray-300 mb-6">Вам нужно принять решение по акции XYZ Corp.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <!-- Chart Side -->
+                    <div class="bg-slate-800 p-4 rounded-xl">
+                        <div class="h-40 flex items-end justify-between gap-1 mb-2 border-b border-gray-600 pb-2">
+                            <!-- Fake bearish bars -->
+                            <div class="w-4 bg-green-500 h-[60%]"></div>
+                            <div class="w-4 bg-red-500 h-[55%]"></div>
+                            <div class="w-4 bg-green-500 h-[58%]"></div>
+                            <div class="w-4 bg-red-500 h-[50%]"></div>
+                            <div class="w-4 bg-red-500 h-[40%]"></div>
+                            <div class="w-4 bg-red-500 h-[30%]"></div>
+                            <div class="w-4 bg-green-500 h-[32%]"></div>
+                            <div class="w-4 bg-red-500 h-[25%] opacity-50 animate-pulse"></div>
+                        </div>
+                        <p class="text-xs text-gray-400 text-center">График D1 (Нисходящий тренд)</p>
+                    </div>
+
+                    <!-- Sentiment Side -->
+                    <div class="flex flex-col justify-center gap-4">
+                        <div class="p-4 bg-slate-800 rounded-xl border border-purple-500/30">
+                            <h4 class="text-gray-400 text-xs uppercase font-bold mb-2">Настроение толпы (Social Sentiment)</h4>
+                            <div class="flex items-center gap-4">
+                                <div class="text-3xl font-bold text-green-400">92% BUY</div>
+                                <div class="flex-1 h-4 bg-gray-700 rounded-full overflow-hidden">
+                                    <div class="h-full bg-green-500 w-[92%]"></div>
+                                </div>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-2">"Все гуру в Twitter кричат: ПОКУПАЙ ДНО!"</p>
+                        </div>
+                        
+                        <h4 class="text-white font-bold">Ваше решение?</h4>
+                        <div class="flex gap-4">
+                            <button onclick="revealHerdResult('buy')" class="flex-1 py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded">BUY (Как все)</button>
+                            <button onclick="revealHerdResult('sell')" class="flex-1 py-3 bg-red-600 hover:bg-red-500 text-white font-bold rounded">SELL (По графику)</button>
+                        </div>
+                    </div>
+                </div>
+                 <div id="herd-result" class="hidden mt-6 p-6 bg-slate-900/80 border border-purple-500/30 rounded-xl"></div>
+            `;
+        }
+
+        function revealHerdResult(choice) {
+            const res = document.getElementById('herd-result');
+            res.classList.remove('hidden');
+            
+            if(choice === 'buy') {
+                res.innerHTML = `
+                    <h3 class="text-xl font-bold text-red-400 mb-2">Вы попали в ловушку!</h3>
+                    <p class="text-gray-300 mb-2">Вы проигнорировали нисходящий тренд на графике только потому, что 92% толпы кричали "Покупай".</p>
+                    <p class="italic text-gray-400 text-sm border-l-2 border-purple-500 pl-4">
+                        "Когда много людей делает что-то, мы полагаем, что это правильно. Это принцип социального доказательства — одно из главных орудий влияния." — <strong>Роберт Чалдини</strong>
+                    </p>
+                `;
             } else {
-                displays.lossWarning.style.opacity = 0;
+                 res.innerHTML = `
+                    <h3 class="text-xl font-bold text-green-400 mb-2">Победа разума!</h3>
+                    <p class="text-gray-300 mb-2">Вы доверились фактам (графику), а не мнению толпы. Вы преодолели социальное давление.</p>
+                    <p class="italic text-gray-400 text-sm border-l-2 border-purple-500 pl-4">
+                        "В моменты неопределенности мы склонны смотреть на действия других. Но на рынке толпа часто ошибается в поворотных точках." — <strong>Роберт Чалдини</strong>
+                    </p>
+                `;
             }
         }
 
+        // --- GAME 3: EMOTION CHECK (Ekman) ---
+        function renderEmotionGame(container) {
+            container.innerHTML = `
+                 <h2 class="text-2xl font-bold text-red-400 mb-4">Детектор Тильта (По Полу Экману)</h2>
+                 <p class="text-gray-300 mb-6">Экман доказал, что эмоции имеют "рефрактерный период", когда мы видим только то, что подтверждает эмоцию. Оцените свое состояние перед сделкой.</p>
+                 
+                 <div class="space-y-6 max-w-lg mx-auto">
+                    <div>
+                        <label class="text-sm text-gray-400 mb-2 block">Уровень энергии / возбуждения</label>
+                        <input type="range" id="energy" min="0" max="100" class="w-full h-2 bg-gray-700 rounded-lg slider-thumb">
+                        <div class="flex justify-between text-xs text-gray-500 mt-1"><span>Сонливость</span> <span>Норма</span> <span>Эйфория/Ярость</span></div>
+                    </div>
+
+                    <div>
+                        <label class="text-sm text-gray-400 mb-2 block">Желание "отыграться" за прошлый убыток</label>
+                        <input type="range" id="revenge" min="0" max="100" class="w-full h-2 bg-gray-700 rounded-lg slider-thumb">
+                        <div class="flex justify-between text-xs text-gray-500 mt-1"><span>Нет</span> <span>Немного</span> <span>ОЧЕНЬ СИЛЬНО</span></div>
+                    </div>
+
+                     <div>
+                        <label class="text-sm text-gray-400 mb-2 block">Уверенность в сделке</label>
+                        <input type="range" id="confidence" min="0" max="100" class="w-full h-2 bg-gray-700 rounded-lg slider-thumb">
+                        <div class="flex justify-between text-xs text-gray-500 mt-1"><span>Сомневаюсь</span> <span>Есть план</span> <span>"Это 100% верняк"</span></div>
+                    </div>
+
+                    <button onclick="analyzeTilt()" class="w-full py-3 bg-red-600 hover:bg-red-500 text-white font-bold rounded shadow-lg">Провести диагностику</button>
+                 </div>
+                 
+                 <div id="tilt-result" class="hidden mt-6 p-6 rounded-xl text-center"></div>
+            `;
+        }
+
+        function analyzeTilt() {
+            const energy = parseInt(document.getElementById('energy').value);
+            const revenge = parseInt(document.getElementById('revenge').value);
+            const conf = parseInt(document.getElementById('confidence').value);
+            
+            const res = document.getElementById('tilt-result');
+            res.classList.remove('hidden');
+
+            let score = 0;
+            if (energy > 80 || energy < 20) score += 2;
+            if (revenge > 30) score += 3;
+            if (conf > 90) score += 2; // Overconfidence is bad
+
+            if (score >= 4) {
+                res.className = "mt-6 p-6 rounded-xl text-center bg-red-900/50 border border-red-500 animate-pulse-red";
+                res.innerHTML = `
+                    <div class="text-4xl mb-2">🛑</div>
+                    <h3 class="text-xl font-bold text-red-400 mb-2">ТОРГОВЛЯ ЗАПРЕЩЕНА</h3>
+                    <p class="text-gray-300">Вы в зоне риска! Экман называет это "Эмоциональным захватом".<br>
+                    Вы сейчас не способны объективно оценивать риски.</p>
+                    <ul class="text-left text-sm text-red-200 mt-4 list-disc list-inside">
+                        ${revenge > 30 ? '<li>Вы пытаетесь отомстить рынку (Месть).</li>' : ''}
+                        ${conf > 90 ? '<li>Вы слишком самоуверенны (Иллюзия контроля).</li>' : ''}
+                        ${energy > 80 ? '<li>Слишком сильное возбуждение (Эйфория или Гнев).</li>' : ''}
+                    </ul>
+                    <button class="mt-4 px-4 py-2 bg-gray-700 rounded text-sm hover:bg-gray-600">Закрыть терминал на 1 час</button>
+                `;
+            } else {
+                res.className = "mt-6 p-6 rounded-xl text-center bg-green-900/50 border border-green-500";
+                res.innerHTML = `
+                    <div class="text-4xl mb-2">✅</div>
+                    <h3 class="text-xl font-bold text-green-400 mb-2">Зеленый свет</h3>
+                    <p class="text-gray-300">Ваше состояние подходит для принятия взвешенных решений.</p>
+                `;
+            }
+        }
+
+        // --- GAME 4: PROSPECT THEORY (Original) ---
+        function renderProspectGame(container) {
+             container.innerHTML = `
+                <h2 class="text-2xl font-bold text-green-400 mb-4">Теория Перспектив</h2>
+                <p class="text-gray-300 mb-6">Классическая задача Канемана и Тверски. Выберите свой путь.</p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="p-4 bg-slate-800 rounded-xl border-t-2 border-green-500">
+                        <h4 class="font-bold text-white mb-4">Сценарий: ПРИБЫЛЬ</h4>
+                        <button onclick="alert('Выбор большинства: Синица в руках. Но математически вы теряете потенциал.')" class="w-full mb-2 p-3 bg-slate-700 hover:bg-slate-600 text-left rounded">🔒 Гарантированно: +$900</button>
+                        <button onclick="alert('Выбор профи: Риск ради матожидания.')" class="w-full p-3 bg-slate-700 hover:bg-slate-600 text-left rounded">🎲 90% шанс: +$1000</button>
+                    </div>
+                    <div class="p-4 bg-slate-800 rounded-xl border-t-2 border-red-500">
+                        <h4 class="font-bold text-white mb-4">Сценарий: УБЫТОК</h4>
+                        <button onclick="alert('Выбор профи: Принятие боли. Сохранение депозита.')" class="w-full mb-2 p-3 bg-slate-700 hover:bg-slate-600 text-left rounded">✂️ Гарантированно: -$900</button>
+                        <button onclick="alert('Выбор лудомана: Надежда умирает последней (вместе с депозитом).')" class="w-full p-3 bg-slate-700 hover:bg-slate-600 text-left rounded">🎰 90% шанс: -$1000</button>
+                    </div>
+                </div>
+                 <div class="mt-6 p-4 bg-blue-900/20 rounded-lg text-sm text-gray-400">
+                    <strong>Суть:</strong> Мы боимся убытков в 2 раза сильнее, чем радуемся прибыли. Поэтому мы склонны рисковать, чтобы избежать убытка (пересиживание), но боимся рисковать, чтобы увеличить прибыль (ранний выход).
+                </div>
+             `;
+        }
+
+
+        // --- MATH SIMULATOR LOGIC (Simplified from v2) ---
         function runSimulation() {
-            if (document.getElementById('view-simulation').classList.contains('hidden')) switchTab('simulation');
-            const Pw = parseInt(inputs.winRate.value) / 100;
-            const Sw = parseInt(inputs.profit.value) / 100;
-            const Sl = parseInt(inputs.loss.value) / 100;
-            const N = parseInt(inputs.positions.value);
-            const labels = Array.from({length: steps}, (_, i) => i);
-            const soloData = [startCapital];
-            const portfolioData = [startCapital];
-            let currentSolo = startCapital;
-            for (let i = 1; i < steps; i++) {
-                if (currentSolo < 1) { soloData.push(0); continue; }
-                const outcome = Math.random();
-                if (outcome < Pw) currentSolo *= (1 + Sw); else currentSolo *= (1 - Sl);
-                soloData.push(currentSolo);
-            }
-            let currentPortfolio = startCapital;
-            for (let i = 1; i < steps; i++) {
-                if (currentPortfolio < 1) { portfolioData.push(0); continue; }
-                let tradeSize = currentPortfolio / N;
-                let stepPnL = 0;
-                for (let j = 0; j < N; j++) {
-                    const outcome = Math.random();
-                    if (outcome < Pw) stepPnL += tradeSize * Sw; else stepPnL -= tradeSize * Sl;
+            const winRate = parseInt(document.getElementById('winRate').value) / 100;
+            const profit = parseInt(document.getElementById('profit').value) / 100;
+            const loss = parseInt(document.getElementById('loss').value) / 100;
+            const positions = parseInt(document.getElementById('positions').value);
+
+            const ev = (winRate * profit) - ((1 - winRate) * loss);
+            document.getElementById('mathExp').innerText = (ev * 100).toFixed(1) + "%";
+            document.getElementById('mathExp').className = `text-xl font-bold ${ev > 0 ? 'text-green-400' : 'text-red-400'}`;
+
+            // Chart Logic
+            const ctx = document.getElementById('simChart').getContext('2d');
+            
+            // Generate Data
+            const steps = 50;
+            let solo = 10000;
+            let port = 10000;
+            const soloData = [10000];
+            const portData = [10000];
+            const labels = Array.from({length: steps+1}, (_, i) => i);
+
+            for(let i=0; i<steps; i++) {
+                // Solo
+                if (solo > 0) {
+                     if(Math.random() < winRate) solo *= (1+profit);
+                     else solo *= (1-loss);
                 }
-                currentPortfolio += stepPnL;
-                portfolioData.push(currentPortfolio);
+                soloData.push(solo);
+
+                // Portfolio
+                if (port > 0) {
+                    let stepPL = 0;
+                    let betSize = port / positions;
+                    for(let j=0; j<positions; j++) {
+                        if(Math.random() < winRate) stepPL += betSize * profit;
+                        else stepPL -= betSize * loss;
+                    }
+                    port += stepPL;
+                }
+                portData.push(port);
             }
-            displays.resSolo.textContent = formatMoney(soloData[steps - 1]);
-            displays.resSolo.className = `text-lg font-mono font-bold ${soloData[steps-1] > startCapital ? 'text-green-500' : 'text-red-500'}`;
-            displays.resPort.textContent = formatMoney(portfolioData[steps - 1]);
-            displays.resPort.className = `text-lg font-mono font-bold ${portfolioData[steps-1] > startCapital ? 'text-green-500' : 'text-red-500'}`;
-            generateInsight(soloData[steps-1], portfolioData[steps-1], N, Sl, Sw, Pw);
-            renderChart(labels, soloData, portfolioData);
-        }
 
-        function formatMoney(amount) {
-            if (amount > 1000000000) return '$' + (amount / 1000000000).toFixed(1) + 'B';
-            if (amount > 1000000) return '$' + (amount / 1000000).toFixed(1) + 'M';
-            if (amount > 1000) return '$' + (amount / 1000).toFixed(0) + 'K';
-            return '$' + amount.toFixed(0);
-        }
+            // Update Text
+             document.getElementById('resSolo').innerText = "$" + Math.round(soloData[steps]).toLocaleString();
+             document.getElementById('resPort').innerText = "$" + Math.round(portData[steps]).toLocaleString();
 
-        function generateInsight(soloRes, portRes, N, Sl, Sw, Pw) {
-            displays.insightBox.classList.remove('hidden');
-            let text = "";
-            const ev = (Pw * Sw) - ((1-Pw) * Sl);
-            if (ev < 0 && N > 8 && portRes > startCapital * 0.5) text = "Диверсификация продлевает жизнь депозиту даже при плохой стратегии.";
-            else if (soloRes < 100 && portRes > startCapital) text = "Одиночный игрок разорился (Ошибка выжившего). Портфель выжил за счет мат. статистики.";
-            else if (portRes > soloRes * 10) text = "Сила 'Регенерации' и диверсификации: системный подход бьет удачу.";
-            else text = "Зеленая линия показывает преимущество портфельного подхода.";
-            displays.insightText.textContent = text;
-        }
-
-        function renderChart(labels, soloData, portfolioData) {
-            const ctx = document.getElementById('simulationChart').getContext('2d');
-            if (chartInstance) chartInstance.destroy();
-            let gradientGreen = ctx.createLinearGradient(0, 0, 0, 400);
-            gradientGreen.addColorStop(0, 'rgba(34, 197, 94, 0.5)');
-            gradientGreen.addColorStop(1, 'rgba(34, 197, 94, 0)');
-            let gradientRed = ctx.createLinearGradient(0, 0, 0, 400);
-            gradientRed.addColorStop(0, 'rgba(239, 68, 68, 0.5)');
-            gradientRed.addColorStop(1, 'rgba(239, 68, 68, 0)');
-            chartInstance = new Chart(ctx, {
+            if(window.myChart) window.myChart.destroy();
+            window.myChart = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: labels,
                     datasets: [
-                        { label: 'Портфель (Казино)', data: portfolioData, borderColor: '#22c55e', backgroundColor: gradientGreen, borderWidth: 2, pointRadius: 0, fill: true, tension: 0.1 },
-                        { label: 'Игрок (Ва-банк)', data: soloData, borderColor: '#ef4444', backgroundColor: gradientRed, borderWidth: 1, borderDash: [5, 5], pointRadius: 0, fill: false, tension: 0.1 }
+                        { label: 'Портфель', data: portData, borderColor: '#22c55e', borderWidth: 2 },
+                        { label: 'Ва-банк', data: soloData, borderColor: '#ef4444', borderWidth: 1, borderDash: [5,5] }
                     ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    interaction: { mode: 'index', intersect: false },
-                    plugins: { legend: { labels: { color: '#94a3b8' } }, tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.9)', titleColor: '#e2e8f0', bodyColor: '#e2e8f0', borderColor: '#334155', borderWidth: 1 } },
-                    scales: { x: { display: false }, y: { type: 'logarithmic', grid: { color: '#334155' }, ticks: { color: '#94a3b8', callback: function(value) { return '$' + Number(value).toLocaleString(); } } } }
+                    scales: { y: { type: 'logarithmic', display: false }, x: { display: false } },
+                    plugins: { legend: { display: false } }
                 }
             });
         }
-
-        updateDisplays();
+        
+        // Init Sim on Load
         runSimulation();
+
     </script>
 </body>
 </html>
