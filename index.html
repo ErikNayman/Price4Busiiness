@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Трейдер: Игры Разума | Лаборатория v13</title>
+    <title>Трейдер: Игры Разума | Лаборатория v14</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -181,7 +181,7 @@
             </button>
         </aside>
 
-        <main class="flex-1 p-4 md:p-8 flex flex-col">
+        <main class="flex-1 p-4 md:p-8 flex flex-col relative z-0"> <!-- Added relative z-0 to main to manage stacking context -->
             <!-- Метрики -->
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4 px-4 text-center">
                 <!-- EV -->
@@ -190,7 +190,7 @@
                     <div id="mathExp" class="text-xl font-bold text-gray-200">0%</div>
                 </div>
                 
-                <!-- Solo (Tooltip Added) -->
+                <!-- Solo (Tooltip Fixed) -->
                 <div class="relative group cursor-help">
                     <div class="text-xs text-gray-500 flex items-center justify-center gap-1">
                         Результат "Ва-банк"
@@ -198,13 +198,13 @@
                     </div>
                     <div id="resSolo" class="text-xl font-bold text-red-500">$0</div>
                     <!-- Tooltip -->
-                    <div class="tooltip-arrow absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 p-3 bg-slate-800 text-gray-300 text-xs text-left rounded-lg shadow-xl border border-slate-600 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 leading-relaxed">
-                        <strong class="text-white">Time Probability (Талеб).</strong><br>
+                    <div class="tooltip-arrow absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-slate-800 text-gray-300 text-xs text-left rounded-lg shadow-xl border border-slate-600 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 leading-relaxed">
+                        <strong class="text-white block mb-1">Time Probability (Талеб)</strong>
                         Это результат, если вы ставите всё на одну серию сделок (1 актив). Здесь работает "черная полоса": одна ошибка может убить депозит. Это путь одиночки.
                     </div>
                 </div>
 
-                <!-- Portfolio (Tooltip Added) -->
+                <!-- Portfolio (Tooltip Fixed) -->
                 <div class="relative group cursor-help">
                     <div class="text-xs text-gray-500 flex items-center justify-center gap-1">
                         Результат "Портфеля"
@@ -212,8 +212,8 @@
                     </div>
                     <div id="resPort" class="text-xl font-bold text-green-500">$0</div>
                     <!-- Tooltip -->
-                    <div class="tooltip-arrow absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 p-3 bg-slate-800 text-gray-300 text-xs text-left rounded-lg shadow-xl border border-slate-600 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 leading-relaxed">
-                        <strong class="text-white">Ensemble Probability.</strong><br>
+                    <div class="tooltip-arrow absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-slate-800 text-gray-300 text-xs text-left rounded-lg shadow-xl border border-slate-600 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 leading-relaxed">
+                        <strong class="text-white block mb-1">Ensemble Probability</strong>
                         Результат, если капитал разделен на N независимых частей. Убытки одних идей перекрываются прибылью других. Это путь казино и фондов.
                     </div>
                 </div>
@@ -270,7 +270,7 @@
             </div>
 
             <!-- График -->
-            <div class="flex-1 glass-panel rounded-2xl p-4 relative">
+            <div class="flex-1 glass-panel rounded-2xl p-4 relative z-0">
                 <canvas id="simChart"></canvas>
             </div>
         </main>
