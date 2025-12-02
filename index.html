@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Трейдер: Игры Разума | Лаборатория v9</title>
+    <title>Трейдер: Игры Разума | Лаборатория v10</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -145,6 +145,23 @@
                     </div>
                 </div>
 
+                <!-- GAME 0: MARKET LIFE (NEW) -->
+                <div onclick="openGame('marketlife')" class="col-span-1 md:col-span-2 lg:col-span-3 game-card bg-gradient-to-r from-slate-800 to-slate-700 border border-emerald-500 p-6 rounded-2xl relative overflow-hidden group shadow-2xl cursor-pointer">
+                    <div class="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 text-8xl">🌱</div>
+                    <div class="relative z-10">
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="px-2 py-1 bg-emerald-500 text-white text-xs font-bold rounded uppercase">Игра на выживание</span>
+                            <h3 class="text-2xl font-bold text-white">Жизнь Рынка: Страх и Жадность</h3>
+                        </div>
+                        <p class="text-gray-300 mb-6 max-w-2xl">
+                            Эволюционная игра. Ваша цель не просто заработать, а выжить и размножиться. 
+                            Управляйте режимами: 🛡️Страх, ⚖️Норма, ⚔️Жадность. 
+                            Сможете ли вы передать свои гены следующему поколению?
+                        </p>
+                        <button class="px-6 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded shadow-lg transition">Играть →</button>
+                    </div>
+                </div>
+
                 <!-- GAME 1: ANCHORING -->
                 <div onclick="openGame('anchor')" class="game-card glass-panel p-6 rounded-2xl border-t-4 border-yellow-500 relative overflow-hidden group">
                     <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 text-6xl">⚓</div>
@@ -166,7 +183,7 @@
                     <p class="text-sm text-gray-400 mb-4">Чекап эмоций перед торгами по Экману.</p>
                 </div>
 
-                <!-- GAME 4: PROSPECT THEORY (RESTORED) -->
+                <!-- GAME 4: PROSPECT THEORY -->
                 <div onclick="openGame('prospect')" class="game-card glass-panel p-6 rounded-2xl border-t-4 border-green-500 relative overflow-hidden group">
                     <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 text-6xl">⚖️</div>
                     <h3 class="text-xl font-bold text-white mb-2">Цена Страха</h3>
@@ -213,7 +230,267 @@
             if(gameId === 'anchor') renderAnchorGame(content);
             if(gameId === 'herd') renderHerdGame(content);
             if(gameId === 'emotion') renderEmotionGame(content);
-            if(gameId === 'prospect') renderProspectGame(content); 
+            if(gameId === 'prospect') renderProspectGame(content);
+            if(gameId === 'marketlife') renderMarketLifeGame(content); 
+        }
+
+        // ==========================================
+        // MARKET LIFE GAME LOGIC
+        // ==========================================
+        let mlState = {
+            capital: 100,
+            round: 1,
+            maxRounds: 25,
+            offspring: 0,
+            history: [], // { capital, mood, action, market, profit }
+            emotions: [] // { fear, greed }
+        };
+
+        const mlNews = [
+            { text: "ФРС намекает на снижение ставки. Рынок в эйфории!", type: "greed" },
+            { text: "Известный банк объявил о проблемах с ликвидностью.", type: "fear" },
+            { text: "Биткоин пробил исторический максимум!", type: "greed" },
+            { text: "Геополитическая напряженность растет. Инвесторы нервничают.", type: "fear" },
+            { text: "Отчетность техгигантов превзошла ожидания.", type: "greed" },
+            { text: "Инфляция снова растет, рынки в замешательстве.", type: "fear" },
+            { text: "В чатах говорят, что это 'новая парадигма'.", type: "greed" },
+            { text: "Крупный фонд ликвидирует позиции.", type: "fear" },
+            { text: "Аналитики прогнозируют 'Золотой век' для акций.", type: "greed" },
+            { text: "Слухи о жестком регулировании крипты.", type: "fear" },
+            { text: "Рынок стоит на месте уже неделю. Скучно.", type: "neutral" },
+            { text: "Все покупают мем-коины. Вы тоже хотите?", type: "greed" },
+            { text: "Эксперты советуют выйти в кэш.", type: "fear" },
+            { text: "Рынок растет 10 дней подряд без откатов.", type: "greed" },
+            { text: "Неожиданное банкротство брокера.", type: "fear" }
+        ];
+
+        function renderMarketLifeGame(container) {
+            // Reset state
+            mlState = { capital: 100, round: 1, maxRounds: 25, offspring: 0, history: [], emotions: [] };
+            
+            container.innerHTML = `
+                <div class="max-w-4xl mx-auto">
+                    <!-- Top Bar -->
+                    <div class="flex justify-between items-center mb-6 bg-slate-800 p-4 rounded-xl border border-slate-700">
+                        <div class="text-center">
+                            <div class="text-xs text-gray-400 uppercase">День</div>
+                            <div class="text-xl font-bold text-white"><span id="mlRound">1</span>/25</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-xs text-gray-400 uppercase">Капитал (HP)</div>
+                            <div class="text-2xl font-mono font-bold text-emerald-400" id="mlCapital">100</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-xs text-gray-400 uppercase">Потомки</div>
+                            <div class="text-xl font-bold text-indigo-400" id="mlOffspring">0</div>
+                        </div>
+                    </div>
+
+                    <!-- Game Area -->
+                    <div id="mlGameArea" class="glass-panel p-8 rounded-2xl text-center relative overflow-hidden">
+                        <div id="mlPhaseNews">
+                            <div class="mb-2 text-sm text-gray-400 uppercase tracking-widest">Новости дня</div>
+                            <h3 class="text-2xl font-bold text-white mb-8 min-h-[80px] flex items-center justify-center" id="mlNewsText">
+                                ...
+                            </h3>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <button onclick="mlAction('S')" class="p-6 bg-slate-800 hover:bg-slate-700 border border-slate-600 hover:border-blue-400 rounded-xl transition group">
+                                    <div class="text-4xl mb-2 group-hover:scale-110 transition">🛡️</div>
+                                    <div class="font-bold text-white mb-1">СТРАХ</div>
+                                    <div class="text-xs text-gray-400">Защита. Кэш.</div>
+                                    <div class="text-xs text-blue-400 mt-2">Мин. риск</div>
+                                </button>
+                                <button onclick="mlAction('N')" class="p-6 bg-slate-800 hover:bg-slate-700 border border-slate-600 hover:border-gray-400 rounded-xl transition group">
+                                    <div class="text-4xl mb-2 group-hover:scale-110 transition">⚖️</div>
+                                    <div class="font-bold text-white mb-1">НОРМА</div>
+                                    <div class="text-xs text-gray-400">Умеренная позиция.</div>
+                                    <div class="text-xs text-gray-400 mt-2">Баланс</div>
+                                </button>
+                                <button onclick="mlAction('G')" class="p-6 bg-slate-800 hover:bg-slate-700 border border-slate-600 hover:border-red-400 rounded-xl transition group">
+                                    <div class="text-4xl mb-2 group-hover:scale-110 transition">⚔️</div>
+                                    <div class="font-bold text-white mb-1">ЖАДНОСТЬ</div>
+                                    <div class="text-xs text-gray-400">Плечо. На всю котлету.</div>
+                                    <div class="text-xs text-red-400 mt-2">Макс. риск</div>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="mlPhaseResult" class="hidden">
+                            <h3 class="text-xl text-gray-300 mb-2">Рынок сегодня:</h3>
+                            <div id="mlMarketReveal" class="text-4xl font-bold mb-4"></div>
+                            <div id="mlResultText" class="text-lg mb-6"></div>
+                            
+                            <div class="bg-slate-900/50 p-4 rounded-xl mb-6 max-w-md mx-auto">
+                                <p class="text-sm text-gray-400 mb-2">Оцените свои эмоции перед выбором (для статистики):</p>
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-xs text-blue-300">Страх</span>
+                                    <input type="range" id="mlFearScore" min="0" max="5" value="0" class="w-32 h-2 bg-gray-700 rounded-lg slider-thumb">
+                                    <span class="text-xs w-4" id="mlFearVal">0</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs text-red-300">Жадность</span>
+                                    <input type="range" id="mlGreedScore" min="0" max="5" value="0" class="w-32 h-2 bg-gray-700 rounded-lg slider-thumb">
+                                    <span class="text-xs w-4" id="mlGreedVal">0</span>
+                                </div>
+                            </div>
+
+                            <button onclick="mlNextRound()" class="px-8 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded shadow-lg">Следующий день →</button>
+                        </div>
+                    </div>
+                    
+                    <div id="mlChartContainer" class="mt-6 h-32 hidden">
+                        <canvas id="mlChart"></canvas>
+                    </div>
+                </div>
+            `;
+            
+            // Setup sliders listeners
+            setTimeout(() => {
+                document.getElementById('mlFearScore').oninput = function() { document.getElementById('mlFearVal').innerText = this.value; };
+                document.getElementById('mlGreedScore').oninput = function() { document.getElementById('mlGreedVal').innerText = this.value; };
+            }, 100);
+
+            mlNextNews();
+        }
+
+        function mlNextNews() {
+            // Pick random news
+            const newsItem = mlNews[Math.floor(Math.random() * mlNews.length)];
+            document.getElementById('mlNewsText').innerText = `"${newsItem.text}"`;
+            document.getElementById('mlPhaseNews').classList.remove('hidden');
+            document.getElementById('mlPhaseResult').classList.add('hidden');
+        }
+
+        function mlAction(choice) {
+            // 1. Determine Market State (Random but weighted)
+            const rand = Math.random();
+            let market = 'FLAT';
+            if (rand < 0.33) market = 'BULL';
+            else if (rand < 0.66) market = 'BEAR';
+            
+            // 2. Calculate PnL based on Payoff Matrix
+            // S: Bull 0, Bear +5, Flat 0
+            // N: Bull +10, Bear -10, Flat -2
+            // G: Bull +30, Bear -40, Flat -5
+            let pct = 0;
+            if (choice === 'S') {
+                if (market === 'BEAR') pct = 5;
+            } else if (choice === 'N') {
+                if (market === 'BULL') pct = 10;
+                else if (market === 'BEAR') pct = -10;
+                else pct = -2;
+            } else if (choice === 'G') {
+                if (market === 'BULL') pct = 30;
+                else if (market === 'BEAR') pct = -40;
+                else pct = -5;
+            }
+
+            // 3. Update Capital
+            const prevCapital = mlState.capital;
+            mlState.capital = mlState.capital * (1 + pct / 100);
+            
+            // 4. Save History
+            mlState.history.push(mlState.capital);
+
+            // 5. Show Result UI
+            document.getElementById('mlPhaseNews').classList.add('hidden');
+            const resDiv = document.getElementById('mlPhaseResult');
+            resDiv.classList.remove('hidden');
+            
+            const mText = document.getElementById('mlMarketReveal');
+            if(market === 'BULL') mText.innerHTML = "<span class='text-green-400'>🚀 BULL (Рост)</span>";
+            else if(market === 'BEAR') mText.innerHTML = "<span class='text-red-500'>🩸 BEAR (Падение)</span>";
+            else mText.innerHTML = "<span class='text-gray-400'>💤 FLAT (Боковик)</span>";
+
+            const rText = document.getElementById('mlResultText');
+            if(pct > 0) rText.innerHTML = `Вы заработали <span class='text-green-400'>+${pct}%</span>`;
+            else if(pct < 0) rText.innerHTML = `Вы потеряли <span class='text-red-400'>${pct}%</span>`;
+            else rText.innerHTML = `Капитал сохранился (0%)`;
+
+            document.getElementById('mlCapital').innerText = mlState.capital.toFixed(0);
+            
+            // Store choice for next step
+            mlState.lastChoice = choice;
+        }
+
+        function mlNextRound() {
+            // 1. Save Emotion Data
+            const fear = parseInt(document.getElementById('mlFearScore').value);
+            const greed = parseInt(document.getElementById('mlGreedScore').value);
+            mlState.emotions.push({ fear, greed, round: mlState.round, choice: mlState.lastChoice });
+
+            // 2. Check Death
+            if (mlState.capital <= 0.1) {
+                mlFinishGame("DEATH");
+                return;
+            }
+
+            // 3. Check Reproduction (Every 5 rounds)
+            if (mlState.round % 5 === 0) {
+                if (mlState.capital >= 150) {
+                    mlState.offspring++;
+                    document.getElementById('mlOffspring').innerText = mlState.offspring;
+                    // Reset capital cost for reproduction? No, per description implies accumulation or simple check.
+                    // Let's say it costs nothing, it's just a score.
+                    // Or maybe it costs 50? "Spent energy". Let's keep it simple: just Score.
+                    alert(`🎉 Эволюционный успех! Ваш капитал (${mlState.capital.toFixed(0)}) позволил создать потомка.`);
+                }
+            }
+
+            // 4. Next Round or Finish
+            if (mlState.round >= mlState.maxRounds) {
+                mlFinishGame("WIN");
+            } else {
+                mlState.round++;
+                document.getElementById('mlRound').innerText = mlState.round;
+                // Reset sliders
+                document.getElementById('mlFearScore').value = 0; document.getElementById('mlFearVal').innerText = "0";
+                document.getElementById('mlGreedScore').value = 0; document.getElementById('mlGreedVal').innerText = "0";
+                mlNextNews();
+            }
+        }
+
+        function mlFinishGame(reason) {
+            const container = document.getElementById('mlGameArea');
+            let html = "";
+            
+            if (reason === "DEATH") {
+                html = `
+                    <div class="text-6xl mb-4">💀</div>
+                    <h2 class="text-3xl font-bold text-red-500 mb-4">Game Over</h2>
+                    <p class="text-gray-300 mb-6">Ваша стратегия не пережила рынок. Жадноcть или неудачный тайминг убили депозит.</p>
+                `;
+            } else {
+                html = `
+                    <div class="text-6xl mb-4">🏆</div>
+                    <h2 class="text-3xl font-bold text-emerald-400 mb-4">Выживание пройдено!</h2>
+                    <p class="text-gray-300 mb-6">Вы прошли 25 дней рынка.</p>
+                `;
+            }
+
+            html += `
+                <div class="grid grid-cols-2 gap-4 mb-8 text-left bg-slate-900 p-6 rounded-xl">
+                    <div>
+                        <div class="text-xs text-gray-500 uppercase">Финальный капитал</div>
+                        <div class="text-2xl font-mono text-white">${mlState.capital.toFixed(0)}</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-500 uppercase">Потомков (Очки)</div>
+                        <div class="text-2xl font-mono text-indigo-400">${mlState.offspring}</div>
+                    </div>
+                </div>
+                
+                <div class="text-sm text-gray-400 mb-6">
+                    <strong>Анализ:</strong> <br>
+                    Ваши "эмоциональные" решения часто приводят к убыткам. 
+                    В следующий раз попробуйте следовать жесткому плану (например, всегда N).
+                </div>
+
+                <button onclick="openGame('marketlife')" class="px-8 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded shadow-lg">Играть снова</button>
+                <button onclick="closeGame()" class="mt-4 block mx-auto text-gray-500 hover:text-white underline">В меню</button>
+            `;
+            container.innerHTML = html;
         }
 
         // ==========================================
